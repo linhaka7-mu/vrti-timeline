@@ -1,111 +1,53 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+@import 'tailwindcss';
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+/*
+ * Design tokens from the style tile (2026-10-19).
+ * Every colour on the page comes from here, so a change of palette is a change in one place.
+ * Tailwind turns each --color-* into utilities: bg-bottle, text-ink, border-copper, …
+ */
+@theme {
+  /* Interface */
+  --color-bottle: #2e4a33; /* frame, selected state */
+  --color-paper: #f3eee2; /* page ground */
+  --color-linen: #dbd3c0; /* slider track, rules */
+  --color-straw: #dbd5a9; /* era buttons */
+  --color-straw-edge: #c9c08a;
+  --color-olive: #968c37; /* density bars behind the slider */
+  --color-copper: #a0714a; /* frame lines only */
+  --color-umber: #694d44; /* secondary text */
+  --color-ink: #33261d; /* body text */
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Data marks: colour carries meaning, so it is never used for decoration.
+     Hue says what a mark is; lightness says how certain it is. */
+  --color-person: #24507a; /* lifetime bar, exact part */
+  --color-person-light: #7fa2c6; /* lifetime bar, uncertain end (always with a person-coloured outline) */
+  --color-record: #a9411c; /* archival record */
+  --color-record-light: #de9a74; /* archival record dated to a month */
+  --color-estimate: #8b8378; /* estimated activity (floruit) hatch */
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Alegreya Sans', 'Gill Sans', sans-serif;
+}
+
+@layer base {
+  html {
+    background: var(--color-bottle);
   }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
   }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+  /* Years must line up in columns: lining, equal-width figures everywhere. */
+  :where(body) {
+    font-variant-numeric: lining-nums tabular-nums;
   }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+  a {
+    color: var(--color-bottle);
   }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+  :focus-visible {
+    outline: 2px solid var(--color-record);
+    outline-offset: 2px;
   }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
 }
