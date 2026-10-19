@@ -27,13 +27,16 @@ export interface PeopleResult {
  * - "Alive in the range" means overlap: born before the range ends and died after it starts (§4.3).
  *   The old timeline asked "born inside the range" instead.
  * - DISTINCT matters: the same person is typed in several named graphs (§8).
- * - rdfs:label exists for only part of the people (§8), so it is optional.
+ * - Names: 99% of these people have no rdfs:label (2,303 of 2,330 rows for 1500–1749, checked
+ *   2026-10-19). The name lives in separate appellation objects linked by P1_is_identified_by,
+ *   typed vrti:Surname / vrti:Forename, each with its own rdfs:label.
  */
 export function peopleAliveQuery(from: number, to: number): string {
   return `PREFIX crm: <http://erlangen-crm.org/current/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-SELECT DISTINCT ?person ?label ?birthStart ?birthEnd ?deathStart ?deathEnd WHERE {
+PREFIX vrti: <https://www.w3id.org/virtual-treasury/ontology#>
+SELECT DISTINCT ?person ?label ?forename ?surname ?birthStart ?birthEnd ?deathStart ?deathEnd WHERE {
   ?birth a crm:E67_Birth ;
          crm:P98_brought_into_life ?person ;
          crm:P4_has_time-span ?birthSpan .
@@ -46,11 +49,29 @@ SELECT DISTINCT ?person ?label ?birthStart ?birthEnd ?deathStart ?deathEnd WHERE
              crm:P82b_end_of_the_end ?deathEnd .
   FILTER(?birthStart <= "${padYear(to)}-12-31"^^xsd:date && ?deathEnd >= "${padYear(from)}-01-01"^^xsd:date)
   OPTIONAL { ?person rdfs:label ?label }
+  OPTIONAL { ?person crm:P1_is_identified_by ?surnameNode .
+             ?surnameNode crm:P2_has_type vrti:Surname ; rdfs:label ?surname }
+  OPTIONAL { ?person crm:P1_is_identified_by ?forenameNode .
+             ?forenameNode crm:P2_has_type vrti:Forename ; rdfs:label ?forename }
 }`
 }
 
 /**
- * Fallback name when a person has no rdfs:label, taken from the URI:
+ * The name shown on the timeline, in reading order ("Samuel Molyneux Madden").
+ * Preference: forename + surname → rdfs:label → the URI.
+ * Single-name Irish people have the same value in both fields ("Adomnán Adomnán", handbook §3.11),
+ * so a repeated name is shown once.
+ */
+export function displayName(parts: { forename?: string; surname?: string; label?: string; uri: string }): string {
+  const { forename, surname, label, uri } = parts
+  if (forename && surname) return forename === surname ? forename : `${forename} ${surname}`
+  if (label) return label
+  if (forename || surname) return (forename ?? surname)!
+  return nameFromUri(uri)
+}
+
+/**
+ * Last-resort name when nothing else is recorded, taken from the URI:
  * ".../person/Ley_Alison_c16/v1m1g2q" → "Ley Alison" (the data's own surname-first order).
  */
 export function nameFromUri(uri: string): string {
@@ -69,6 +90,8 @@ export function toPeople(rows: Binding[]): PeopleResult {
   interface Group {
     uri: string
     label?: string
+    forename?: string
+    surname?: string
     births: Map<string, Interval>
     deaths: Map<string, Interval>
   }
@@ -90,6 +113,8 @@ export function toPeople(rows: Binding[]): PeopleResult {
       groups.set(uri, group)
     }
     if (!group.label && row.label?.value) group.label = row.label.value
+    if (!group.forename && row.forename?.value) group.forename = row.forename.value
+    if (!group.surname && row.surname?.value) group.surname = row.surname.value
     group.births.set(`${birth.raw.begin}|${birth.raw.end}`, birth)
     group.deaths.set(`${death.raw.begin}|${death.raw.end}`, death)
   }
@@ -104,7 +129,7 @@ export function toPeople(rows: Binding[]): PeopleResult {
     const birth = births[0]
     const death = deaths[0]
     if (death.end <= birth.start) issues.push('death recorded before birth')
-    people.push({ uri: group.uri, name: group.label ?? nameFromUri(group.uri), birth, death, issues })
+    people.push({ uri: group.uri, name: displayName(group), birth, death, issues })
   }
 
   people.sort((a, b) => a.birth.start - b.birth.start || a.name.localeCompare(b.name))

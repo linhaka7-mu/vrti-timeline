@@ -1,14 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { nameFromUri, peopleAliveQuery, toPeople } from './people'
+import { displayName, nameFromUri, peopleAliveQuery, toPeople } from './people'
 import type { Binding } from './sparql'
 
 const lit = (value: string) => ({ type: 'literal', value })
 const uri = (value: string) => ({ type: 'uri', value })
 
-function row(person: string, b: [string, string], d: [string, string], label?: string): Binding {
+function row(
+  person: string,
+  b: [string, string],
+  d: [string, string],
+  label?: string,
+  names?: { forename: string; surname: string },
+): Binding {
   return {
     person: uri(person),
     ...(label ? { label: lit(label) } : {}),
+    ...(names ? { forename: lit(names.forename), surname: lit(names.surname) } : {}),
     birthStart: lit(b[0]),
     birthEnd: lit(b[1]),
     deathStart: lit(d[0]),
@@ -34,7 +41,29 @@ describe('nameFromUri', () => {
   })
 })
 
+describe('displayName', () => {
+  const u = 'https://kg.virtualtreasury.ie/person/Madden_Samuel-Molyneux_c18/v1qg75j'
+  it('puts the forename first (as found for Samuel Molyneux Madden on 2026-10-19)', () => {
+    expect(displayName({ uri: u, forename: 'Samuel Molyneux', surname: 'Madden' })).toBe('Samuel Molyneux Madden')
+  })
+  it('shows a single Irish name once', () => {
+    expect(displayName({ uri: u, forename: 'Adomnán', surname: 'Adomnán' })).toBe('Adomnán')
+  })
+  it('prefers the name parts over rdfs:label, and the label over the URI', () => {
+    expect(displayName({ uri: u, forename: 'Henry', surname: 'Jones', label: 'Jones Henry' })).toBe('Henry Jones')
+    expect(displayName({ uri: u, label: 'Henry Jones' })).toBe('Henry Jones')
+    expect(displayName({ uri: u })).toBe('Madden Samuel-Molyneux')
+  })
+})
+
 describe('toPeople', () => {
+  it('builds the name from forename and surname', () => {
+    const { people } = toPeople([
+      row(NUGENT, ['1544-01-01', '1544-12-31'], ['1602-01-01', '1602-12-31'], undefined, { forename: 'Christopher', surname: 'Nugent' }),
+    ])
+    expect(people[0].name).toBe('Christopher Nugent')
+  })
+
   it('merges duplicate rows (several labels) into one person', () => {
     const rows = [
       row(NUGENT, ['1544-01-01', '1544-12-31'], ['1602-01-01', '1602-12-31'], 'Christopher Nugent'),
