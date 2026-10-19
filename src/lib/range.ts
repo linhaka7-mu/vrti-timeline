@@ -66,3 +66,19 @@ export function rangeFromSearch(search: string): YearRange {
   }
   return normaliseRange(from, to)
 }
+
+/** The address for a range, so the current view can be bookmarked or shared: "?from=1500&to=1749". */
+export function rangeToSearch({ from, to }: YearRange): string {
+  return `?from=${from}&to=${to}`
+}
+
+/**
+ * Reads what someone typed into a year box. Returns null for anything that is not a whole year,
+ * so the box can go back to its previous value instead of jumping somewhere unexpected.
+ * Out-of-range years are pulled to the nearest limit: "300" → 400, "2100" → 2025.
+ */
+export function parseYearText(text: string): number | null {
+  const trimmed = text.trim()
+  if (!/^\d{1,4}$/.test(trimmed)) return null
+  return clampYear(Number(trimmed))
+}

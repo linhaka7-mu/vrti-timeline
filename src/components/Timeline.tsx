@@ -7,7 +7,7 @@ import { tickYears, type YearRange } from '../lib/range'
 const ROW_HEIGHT = 44 // px; every row is the same height, which makes the scrolling maths simple
 const VIEW_HEIGHT = 600 // px; the timeline scrolls inside this box
 const OVERSCAN = 8 // extra rows drawn above and below the visible ones, so fast scrolling stays smooth
-const LABEL_WIDTH = 'w-60' // the name column
+const LABEL_WIDTH = 'w-32 sm:w-60' // the name column (narrower on phones)
 
 interface TimelineProps {
   people: Person[]

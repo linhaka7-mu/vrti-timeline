@@ -1,15 +1,25 @@
+import { useEffect, useState } from 'react'
 import { Legend } from './components/Legend'
+import { RangeControl } from './components/RangeControl'
 import { StatusLine } from './components/StatusLine'
 import { Timeline } from './components/Timeline'
+import { useDebouncedValue } from './hooks/useDebouncedValue'
 import { usePeopleAlive } from './hooks/usePeopleAlive'
-import { rangeFromSearch } from './lib/range'
+import { rangeFromSearch, rangeToSearch } from './lib/range'
 
-// The range comes from the address for now (e.g. ?from=1750&to=1922). The slider and era buttons come next.
-const range = rangeFromSearch(window.location.search)
-
-/** Page shell: the framed "archive card" from the style tile, with the timeline inside. */
+/** Page shell: the framed "archive card" from the style tile, with the controls and the timeline inside. */
 function App() {
-  const { data, error, isFetching, refetch } = usePeopleAlive(range)
+  // What the controls show: changes on every slider movement. Starts from the address, so shared links work.
+  const [range, setRange] = useState(() => rangeFromSearch(window.location.search))
+  // What is actually asked of the endpoint: the same range, once it has stopped changing for 300 ms.
+  const settledRange = useDebouncedValue(range, 300)
+  const { data, error, isFetching, refetch } = usePeopleAlive(settledRange)
+
+  // Keep the address in step with the view, so it can be bookmarked or sent to a colleague.
+  // replaceState: dragging the slider should not fill the Back button's history.
+  useEffect(() => {
+    window.history.replaceState(null, '', rangeToSearch(settledRange))
+  }, [settledRange])
 
   return (
     <div className="min-h-screen bg-bottle p-4 sm:p-7">
@@ -33,16 +43,19 @@ function App() {
           </div>
         </header>
 
-        <main className="flex flex-col gap-4">
-          <StatusLine
-            range={range}
-            count={data?.people.length}
-            unreadable={data?.unreadable ?? 0}
-            loading={isFetching}
-            error={error}
-            onRetry={() => void refetch()}
-          />
-          {data && data.people.length > 0 && <Timeline people={data.people} range={range} />}
+        <main className="flex flex-col gap-6">
+          <RangeControl range={range} onChange={setRange} />
+          <div className="flex flex-col gap-4 border-t border-copper pt-5">
+            <StatusLine
+              range={data?.range ?? settledRange}
+              count={data?.people.length}
+              unreadable={data?.unreadable ?? 0}
+              loading={isFetching || range !== settledRange}
+              error={error}
+              onRetry={() => void refetch()}
+            />
+            {data && data.people.length > 0 && <Timeline people={data.people} range={data.range} />}
+          </div>
           <Legend />
         </main>
       </div>

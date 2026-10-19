@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normaliseRange, rangeFromSearch, rangeLength, tickYears } from './range'
+import { normaliseRange, parseYearText, rangeFromSearch, rangeLength, rangeToSearch, tickYears } from './range'
 
 describe('normaliseRange', () => {
   it('clamps to the slider domain and puts the ends in order', () => {
@@ -30,5 +30,29 @@ describe('rangeFromSearch', () => {
   })
   it('keeps shared years inside the slider limits', () => {
     expect(rangeFromSearch('?from=100&to=1200')).toEqual({ from: 400, to: 1200 })
+  })
+})
+
+describe('rangeToSearch', () => {
+  it('round-trips with rangeFromSearch', () => {
+    const range = { from: 1750, to: 1922 }
+    expect(rangeToSearch(range)).toBe('?from=1750&to=1922')
+    expect(rangeFromSearch(rangeToSearch(range))).toEqual(range)
+  })
+})
+
+describe('parseYearText', () => {
+  it('accepts whole years', () => {
+    expect(parseYearText(' 1641 ')).toBe(1641)
+  })
+  it('pulls years outside the slider to the nearest limit', () => {
+    expect(parseYearText('300')).toBe(400)
+    expect(parseYearText('2100')).toBe(2025)
+  })
+  it('rejects anything else', () => {
+    expect(parseYearText('')).toBeNull()
+    expect(parseYearText('16th c.')).toBeNull()
+    expect(parseYearText('1641.5')).toBeNull()
+    expect(parseYearText('-50')).toBeNull()
   })
 })
