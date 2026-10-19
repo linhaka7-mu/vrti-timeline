@@ -1,8 +1,16 @@
-/**
- * Page shell: the framed "archive card" from the style tile.
- * The timeline and the range controls go inside <main> in the next steps.
- */
+import { Legend } from './components/Legend'
+import { StatusLine } from './components/StatusLine'
+import { Timeline } from './components/Timeline'
+import { usePeopleAlive } from './hooks/usePeopleAlive'
+import { rangeFromSearch } from './lib/range'
+
+// The range comes from the address for now (e.g. ?from=1750&to=1922). The slider and era buttons come next.
+const range = rangeFromSearch(window.location.search)
+
+/** Page shell: the framed "archive card" from the style tile, with the timeline inside. */
 function App() {
+  const { data, error, isFetching, refetch } = usePeopleAlive(range)
+
   return (
     <div className="min-h-screen bg-bottle p-4 sm:p-7">
       <div className="mx-auto flex max-w-[1384px] flex-col gap-7 rounded-md border-2 border-copper bg-paper px-5 py-8 outline outline-1 -outline-offset-[12px] outline-dashed outline-copper sm:px-13 sm:py-11">
@@ -25,8 +33,17 @@ function App() {
           </div>
         </header>
 
-        <main>
-          <p className="m-0 text-umber">The timeline will appear here.</p>
+        <main className="flex flex-col gap-4">
+          <StatusLine
+            range={range}
+            count={data?.people.length}
+            unreadable={data?.unreadable ?? 0}
+            loading={isFetching}
+            error={error}
+            onRetry={() => void refetch()}
+          />
+          {data && data.people.length > 0 && <Timeline people={data.people} range={range} />}
+          <Legend />
         </main>
       </div>
     </div>

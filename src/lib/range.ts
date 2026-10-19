@@ -52,3 +52,17 @@ export function tickYears({ from, to }: YearRange): number[] {
   for (let year = Math.ceil(from / step) * step; year <= to + 1; year += step) ticks.push(year)
   return ticks
 }
+
+/**
+ * Reads ?from=…&to=… from the page address, so a view can be shared as a link
+ * (handbook §4.4: "what she takes away"). Anything missing or invalid falls back to the default.
+ */
+export function rangeFromSearch(search: string): YearRange {
+  const params = new URLSearchParams(search)
+  const from = Number(params.get('from'))
+  const to = Number(params.get('to'))
+  if (!params.has('from') || !params.has('to') || !Number.isInteger(from) || !Number.isInteger(to)) {
+    return DEFAULT_RANGE
+  }
+  return normaliseRange(from, to)
+}
