@@ -6,6 +6,45 @@ interface RangeControlProps {
   onChange: (range: YearRange) => void
 }
 
+/**
+ * Era labels in three lengths. Eras are drawn to scale, so Post-1922 is only ~6% of the slider:
+ * each button picks the longest label that fits its own width (CSS container queries).
+ * The widths are per era because the names differ in length. They are the measured text widths
+ * in Alegreya Sans plus ~4px (measured 2026-10-19), compared with the button's inner width.
+ * Tailwind only sees class names written out in full, so each one is spelled out here.
+ *   full  = name + years · short = shorter name only · tiny = abbreviation
+ */
+const ERA_LABELS: Record<string, { short: string; tiny: string; showFull: string; showShort: string; showTiny: string }> = {
+  Medieval: {
+    short: 'Medieval',
+    tiny: 'Med.',
+    showFull: '@min-[60px]:block',
+    showShort: '@min-[52px]:block @min-[60px]:hidden',
+    showTiny: '@min-[52px]:hidden',
+  },
+  'Early Modern': {
+    short: 'E. Modern',
+    tiny: 'E. Mod.',
+    showFull: '@min-[78px]:block',
+    showShort: '@min-[56px]:block @min-[78px]:hidden',
+    showTiny: '@min-[56px]:hidden',
+  },
+  Modern: {
+    short: 'Modern',
+    tiny: 'Mod.',
+    showFull: '@min-[50px]:block',
+    showShort: '@min-[44px]:block @min-[50px]:hidden',
+    showTiny: '@min-[44px]:hidden',
+  },
+  'Post-1922': {
+    short: 'Post-1922',
+    tiny: '1923+',
+    showFull: '@min-[57px]:block',
+    showShort: '@min-[53px]:block @min-[57px]:hidden',
+    showTiny: '@min-[53px]:hidden',
+  },
+}
+
 /** Position of a year along the slider, 0–100 %. */
 function along(year: number): number {
   return ((year - DOMAIN_START) / (DOMAIN_END - DOMAIN_START)) * 100
@@ -58,13 +97,17 @@ export function RangeControl({ range, onChange }: RangeControlProps) {
       <div className="relative mx-[7px] h-12">
         {ERAS.map((era) => {
           const selected = range.from === era.from && range.to === era.to
+          const labels = ERA_LABELS[era.name]
+          const fullName = `${era.name}, ${era.from} to ${era.to}` // for hover and screen readers, whatever fits on screen
           return (
             <button
               key={era.name}
               type="button"
               aria-pressed={selected}
+              aria-label={fullName}
+              title={fullName}
               onClick={() => onChange({ from: era.from, to: era.to })}
-              className={`absolute top-0 flex h-12 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-sm border px-1 ${
+              className={`@container absolute top-0 flex h-12 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-sm border px-1 ${
                 selected ? 'border-bottle bg-bottle text-paper' : 'border-straw-edge bg-straw text-ink hover:bg-straw-edge'
               }`}
               style={{
@@ -72,8 +115,18 @@ export function RangeControl({ range, onChange }: RangeControlProps) {
                 width: `calc(${along(era.to + 1) - along(era.from)}% - 4px)`,
               }}
             >
-              <span className="text-[11px] font-bold whitespace-nowrap sm:text-sm">{era.name}</span>
-              <span className="hidden text-xs whitespace-nowrap sm:block">{era.label}</span>
+              <span aria-hidden="true" className={`hidden text-sm font-bold whitespace-nowrap ${labels.showFull}`}>
+                {era.name}
+              </span>
+              <span aria-hidden="true" className={`hidden text-xs whitespace-nowrap ${labels.showFull}`}>
+                {era.label}
+              </span>
+              <span aria-hidden="true" className={`hidden text-[13px] font-bold whitespace-nowrap ${labels.showShort}`}>
+                {labels.short}
+              </span>
+              <span aria-hidden="true" className={`text-xs font-bold whitespace-nowrap ${labels.showTiny}`}>
+                {labels.tiny}
+              </span>
             </button>
           )
         })}
