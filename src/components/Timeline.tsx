@@ -8,6 +8,11 @@ const ROW_HEIGHT = 44 // px; every row is the same height, which makes the scrol
 const VIEW_HEIGHT = 600 // px; the timeline scrolls inside this box
 const OVERSCAN = 8 // extra rows drawn above and below the visible ones, so fast scrolling stays smooth
 const LABEL_WIDTH = 'w-32 sm:w-60' // the name column (narrower on phones)
+// Empty space after the last year, on the axis and on every row, so that:
+// - on a Mac, the scroll bar (which floats over the content instead of taking its own space)
+//   sits in this gap rather than on top of the bars of people who died late;
+// - the last year label ("1750") has room and is not cut in half.
+const END_GAP = 'pr-5'
 
 interface TimelineProps {
   people: Person[]
@@ -32,7 +37,7 @@ export function Timeline({ people, range }: TimelineProps) {
   return (
     <div className="flex flex-col">
       {/* Year axis. scrollbar-gutter keeps it the same width as the rows below, which may show a scroll bar. */}
-      <div className="flex overflow-hidden border-b border-copper text-[13px] text-umber [scrollbar-gutter:stable]">
+      <div className={`flex overflow-hidden border-b border-copper text-[13px] text-umber [scrollbar-gutter:stable] ${END_GAP}`}>
         <div className={`${LABEL_WIDTH} shrink-0`} />
         <div className="relative h-6 flex-1">
           {ticks.map((year) => (
@@ -88,7 +93,7 @@ function PersonRow({ person, range, ticks, top, striped }: PersonRowProps) {
 
   return (
     <li
-      className={`absolute inset-x-0 flex ${striped ? 'bg-linen/30' : ''}`}
+      className={`absolute inset-x-0 flex ${END_GAP} ${striped ? 'bg-linen/30' : ''}`}
       style={{ top, height: ROW_HEIGHT }}
     >
       <div className={`${LABEL_WIDTH} flex shrink-0 flex-col justify-center overflow-hidden pr-3 pl-1`}>
