@@ -2,9 +2,16 @@ import { padYear, toInterval, type Interval } from './dates'
 import { runSelect, type Binding } from './sparql'
 
 /** A person who can be drawn as a lifetime bar: they have both a birth and a death time-span. */
+export type Gender = 'female' | 'male'
+
 export interface Person {
   uri: string
   name: string
+  /** Kept separately so the list can be sorted by either (supervisor feedback, 2026-10-20). */
+  forename?: string
+  surname?: string
+  /** vrti:Female / vrti:Male. Every one of the 2,330 people alive in 1500–1749 has exactly one (checked 2026-10-29). */
+  gender?: Gender
   birth: Interval
   death: Interval
   /** Things in the data that do not add up. The timeline shows them instead of hiding them (handbook §3.10–3.11). */
@@ -30,13 +37,16 @@ export interface PeopleResult {
  * - Names: 99% of these people have no rdfs:label (2,303 of 2,330 rows for 1500–1749, checked
  *   2026-10-19). The name lives in separate appellation objects linked by P1_is_identified_by,
  *   typed vrti:Surname / vrti:Forename, each with its own rdfs:label.
+ * - Gender is a P2_has_type on the person: vrti:Female or vrti:Male. For 1500–1749 all 2,330 people
+ *   have one, and none has both (2,226 male, 104 female; checked 2026-10-29). The FILTER keeps any
+ *   other type a person may carry out of the result.
  */
 export function peopleAliveQuery(from: number, to: number): string {
   return `PREFIX crm: <http://erlangen-crm.org/current/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX vrti: <https://www.w3id.org/virtual-treasury/ontology#>
-SELECT DISTINCT ?person ?label ?forename ?surname ?birthStart ?birthEnd ?deathStart ?deathEnd WHERE {
+SELECT DISTINCT ?person ?label ?forename ?surname ?gender ?birthStart ?birthEnd ?deathStart ?deathEnd WHERE {
   ?birth a crm:E67_Birth ;
          crm:P98_brought_into_life ?person ;
          crm:P4_has_time-span ?birthSpan .
@@ -53,6 +63,8 @@ SELECT DISTINCT ?person ?label ?forename ?surname ?birthStart ?birthEnd ?deathSt
              ?surnameNode crm:P2_has_type vrti:Surname ; rdfs:label ?surname }
   OPTIONAL { ?person crm:P1_is_identified_by ?forenameNode .
              ?forenameNode crm:P2_has_type vrti:Forename ; rdfs:label ?forename }
+  OPTIONAL { ?person crm:P2_has_type ?gender .
+             FILTER(?gender IN (vrti:Female, vrti:Male)) }
 }`
 }
 
@@ -92,6 +104,7 @@ export function toPeople(rows: Binding[]): PeopleResult {
     label?: string
     forename?: string
     surname?: string
+    genders: Set<Gender>
     births: Map<string, Interval>
     deaths: Map<string, Interval>
   }
@@ -109,12 +122,14 @@ export function toPeople(rows: Binding[]): PeopleResult {
     }
     let group = groups.get(uri)
     if (!group) {
-      group = { uri, births: new Map(), deaths: new Map() }
+      group = { uri, genders: new Set(), births: new Map(), deaths: new Map() }
       groups.set(uri, group)
     }
     if (!group.label && row.label?.value) group.label = row.label.value
     if (!group.forename && row.forename?.value) group.forename = row.forename.value
     if (!group.surname && row.surname?.value) group.surname = row.surname.value
+    const gender = toGender(row.gender?.value)
+    if (gender) group.genders.add(gender)
     group.births.set(`${birth.raw.begin}|${birth.raw.end}`, birth)
     group.deaths.set(`${death.raw.begin}|${death.raw.end}`, death)
   }
@@ -129,11 +144,32 @@ export function toPeople(rows: Binding[]): PeopleResult {
     const birth = births[0]
     const death = deaths[0]
     if (death.end <= birth.start) issues.push('death recorded before birth')
-    people.push({ uri: group.uri, name: displayName(group), birth, death, issues })
+    // None found so far, but if a person is ever typed both ways, say so rather than pick one.
+    if (group.genders.size > 1) issues.push('recorded as both female and male')
+    const gender = group.genders.size === 1 ? [...group.genders][0] : undefined
+    people.push({
+      uri: group.uri,
+      name: displayName(group),
+      forename: group.forename,
+      surname: group.surname,
+      gender,
+      birth,
+      death,
+      issues,
+    })
   }
 
   people.sort((a, b) => a.birth.start - b.birth.start || a.name.localeCompare(b.name))
   return { people, unreadable }
+}
+
+const VRTI = 'https://www.w3id.org/virtual-treasury/ontology#'
+
+/** vrti:Female → 'female', vrti:Male → 'male', anything else → undefined. */
+export function toGender(value: string | undefined): Gender | undefined {
+  if (value === `${VRTI}Female`) return 'female'
+  if (value === `${VRTI}Male`) return 'male'
+  return undefined
 }
 
 export async function fetchPeopleAlive(from: number, to: number, signal?: AbortSignal): Promise<PeopleResult> {

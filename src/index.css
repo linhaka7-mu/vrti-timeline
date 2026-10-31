@@ -8,6 +8,7 @@
 @theme {
   /* Interface */
   --color-bottle: #2e4a33; /* frame, selected state */
+  --color-bottle-tint: #e2ebe3; /* highlighted option in a drop-down */
   --color-paper: #f3eee2; /* page ground */
   --color-linen: #dbd3c0; /* slider track, rules */
   --color-straw: #dbd5a9; /* era buttons */

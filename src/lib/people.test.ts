@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { displayName, nameFromUri, peopleAliveQuery, toPeople } from './people'
+import { displayName, nameFromUri, peopleAliveQuery, toGender, toPeople } from './people'
 import type { Binding } from './sparql'
 
 const lit = (value: string) => ({ type: 'literal', value })
@@ -32,6 +32,18 @@ describe('peopleAliveQuery', () => {
     expect(q).toContain('?birthStart <= "1499-12-31"^^xsd:date')
     expect(q).toContain('?deathEnd >= "0400-01-01"^^xsd:date')
     expect(q).toContain('SELECT DISTINCT')
+  })
+  it('asks for gender, but only the two gender types', () => {
+    expect(peopleAliveQuery(1500, 1749)).toContain('FILTER(?gender IN (vrti:Female, vrti:Male))')
+  })
+})
+
+describe('toGender', () => {
+  it('reads the two VRTI gender types and nothing else', () => {
+    expect(toGender('https://www.w3id.org/virtual-treasury/ontology#Female')).toBe('female')
+    expect(toGender('https://www.w3id.org/virtual-treasury/ontology#Male')).toBe('male')
+    expect(toGender('https://www.w3id.org/virtual-treasury/ontology#Surname')).toBeUndefined()
+    expect(toGender(undefined)).toBeUndefined()
   })
 })
 
@@ -100,6 +112,23 @@ describe('toPeople', () => {
     const { people, unreadable } = toPeople([row(NUGENT, ['17/01/1683', '17/01/1683'], ['1700-01-01', '1700-01-01'])])
     expect(people).toHaveLength(0)
     expect(unreadable).toBe(1)
+  })
+
+  it('keeps forename, surname and gender on the person', () => {
+    const r = row(NUGENT, ['1544-01-01', '1544-12-31'], ['1602-01-01', '1602-12-31'], undefined, { forename: 'Christopher', surname: 'Nugent' })
+    r.gender = uri('https://www.w3id.org/virtual-treasury/ontology#Male')
+    const [person] = toPeople([r]).people
+    expect(person).toMatchObject({ forename: 'Christopher', surname: 'Nugent', gender: 'male' })
+  })
+
+  it('flags a person recorded as both genders and leaves gender empty', () => {
+    const a = row(NUGENT, ['1544-01-01', '1544-12-31'], ['1602-01-01', '1602-12-31'])
+    const b = row(NUGENT, ['1544-01-01', '1544-12-31'], ['1602-01-01', '1602-12-31'])
+    a.gender = uri('https://www.w3id.org/virtual-treasury/ontology#Male')
+    b.gender = uri('https://www.w3id.org/virtual-treasury/ontology#Female')
+    const [person] = toPeople([a, b]).people
+    expect(person.gender).toBeUndefined()
+    expect(person.issues).toContain('recorded as both female and male')
   })
 
   it('sorts by birth', () => {
