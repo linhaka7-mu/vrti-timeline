@@ -96,6 +96,27 @@ export function ListControls({ view, onChange, counts }: ListControlsProps) {
           })}
         </div>
       </fieldset>
+
+      {/* "Mark gender": off by default, so the everyday view keeps one colour for people.
+          The outline is drawn inside the track (an inset ring, not a border), so it takes no space. */}
+      <label className="flex cursor-pointer items-center gap-2.5 text-umber">
+        <input
+          type="checkbox"
+          role="switch"
+          checked={view.markGender}
+          onChange={(event) => set({ markGender: event.target.checked })}
+          className="peer sr-only"
+        />
+        {/* The knob is a real element laid out by flexbox: 3px padding all round and centred
+            vertically, so the gap is the same on every side in every browser. On = knob at the end. */}
+        <span
+          aria-hidden="true"
+          className="flex h-6 w-11 shrink-0 items-center justify-start rounded-full bg-white p-[3px] ring-[1.5px] ring-umber ring-inset transition-colors peer-checked:justify-end peer-checked:bg-bottle peer-checked:ring-bottle peer-checked:*:bg-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-record"
+        >
+          <span className="h-[18px] w-[18px] shrink-0 rounded-full bg-umber" />
+        </span>
+        Mark gender
+      </label>
     </section>
   )
 }

@@ -25,6 +25,11 @@
   --color-record: #a9411c; /* archival record */
   --color-record-light: #de9a74; /* archival record dated to a month */
   --color-estimate: #8b8378; /* estimated activity (floruit) hatch */
+  /* Only when "Mark gender" is on: women's bars. Same rule as the blue: dark = known, light = a window.
+     Pink lies between blue and vermilion, so for red-blind viewers it is not distinct enough on its
+     own; the F / M badge by the name always comes with it (decided 2026-10-31, option A + C). */
+  --color-woman: #c25b7f;
+  --color-woman-light: #eeb9cb;
 
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Alegreya Sans', 'Gill Sans', sans-serif;

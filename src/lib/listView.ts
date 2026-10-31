@@ -22,10 +22,12 @@ export interface ListView {
   gender: GenderFilter
   /** Name search, as typed. Empty means no search. */
   query: string
+  /** "Mark gender": women's bars in pink and an F / M badge by each name. Off by default. */
+  markGender: boolean
 }
 
 /** Earliest birth first: the order the timeline has always used, now stated on the page. */
-export const DEFAULT_VIEW: ListView = { sort: 'birth', direction: 'asc', gender: 'all', query: '' }
+export const DEFAULT_VIEW: ListView = { sort: 'birth', direction: 'asc', gender: 'all', query: '', markGender: false }
 
 export const SORT_KEYS: SortKey[] = ['birth', 'death', 'surname', 'forename', 'age']
 
@@ -142,7 +144,7 @@ export function applyListView(people: Person[], view: ListView): Person[] {
 }
 
 /**
- * Reads the list settings from the page address (?sort=surname&dir=desc&gender=female&q=…),
+ * Reads the list settings from the page address (?sort=surname&dir=desc&gender=female&q=…&marks=gender),
  * so a filtered view can be shared like a range can. Anything unknown falls back to the default.
  */
 export function listViewFromSearch(search: string): ListView {
@@ -155,6 +157,7 @@ export function listViewFromSearch(search: string): ListView {
     direction: dir === 'asc' || dir === 'desc' ? dir : DEFAULT_VIEW.direction,
     gender: gender === 'female' || gender === 'male' ? gender : DEFAULT_VIEW.gender,
     query: params.get('q') ?? DEFAULT_VIEW.query,
+    markGender: params.get('marks') === 'gender',
   }
 }
 
@@ -165,5 +168,6 @@ export function viewToSearch({ from, to }: YearRange, view: ListView): string {
   if (view.direction !== DEFAULT_VIEW.direction) params.set('dir', view.direction)
   if (view.gender !== DEFAULT_VIEW.gender) params.set('gender', view.gender)
   if (view.query.trim()) params.set('q', view.query.trim())
+  if (view.markGender) params.set('marks', 'gender')
   return `?${params.toString()}`
 }

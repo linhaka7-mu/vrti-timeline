@@ -107,11 +107,14 @@ describe('address', () => {
     expect(viewToSearch({ from: 1500, to: 1749 }, DEFAULT_VIEW)).toBe('?from=1500&to=1749')
   })
   it('round-trips every setting, including accented searches', () => {
-    const view: ListView = { sort: 'surname', direction: 'desc', gender: 'female', query: 'Ní Bhriain' }
+    const view: ListView = { sort: 'surname', direction: 'desc', gender: 'female', query: 'Ní Bhriain', markGender: true }
     const search = viewToSearch({ from: 1500, to: 1749 }, view)
     expect(listViewFromSearch(search)).toEqual(view)
   })
   it('ignores values it does not know', () => {
-    expect(listViewFromSearch('?sort=height&dir=up&gender=x')).toEqual(DEFAULT_VIEW)
+    expect(listViewFromSearch('?sort=height&dir=up&gender=x&marks=yes')).toEqual(DEFAULT_VIEW)
+  })
+  it('writes "Mark gender" as marks=gender', () => {
+    expect(viewToSearch({ from: 1500, to: 1749 }, { ...DEFAULT_VIEW, markGender: true })).toBe('?from=1500&to=1749&marks=gender')
   })
 })

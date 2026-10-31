@@ -85,16 +85,18 @@ function App() {
               error={error}
               onRetry={() => void refetch()}
             />
+            {/* The key comes before the timeline, so readers know what the marks mean before they start reading. */}
+            <Legend markGender={view.markGender} />
             {data && shown && shown.length > 0 && (
               // A new order or filter starts the list from the top again (the key makes a fresh timeline).
               <Timeline
                 key={`${view.sort}|${view.direction}|${view.gender}|${view.query}`}
                 people={shown}
                 range={data.range}
+                markGender={view.markGender}
               />
             )}
           </div>
-          <Legend />
         </main>
       </div>
     </div>
