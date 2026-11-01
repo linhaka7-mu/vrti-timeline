@@ -3,7 +3,7 @@ import { Legend } from './components/Legend'
 import { ListControls } from './components/ListControls'
 import { RangeControl } from './components/RangeControl'
 import { StatusLine } from './components/StatusLine'
-import { Timeline } from './components/Timeline'
+import { Timeline, TimelineSkeleton } from './components/Timeline'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
 import { usePeopleAlive } from './hooks/usePeopleAlive'
 import {
@@ -25,6 +25,8 @@ function App() {
   // What is actually asked of the endpoint: the same range, once it has stopped changing for 300 ms.
   const settledRange = useDebouncedValue(range, 300)
   const { data, error, isFetching, refetch } = usePeopleAlive(settledRange)
+  // A range is being loaded: the slider has moved and not settled yet, or the endpoint has not answered.
+  const loading = isFetching || range !== settledRange
   // Sort, gender filter and name search. These work on the people already loaded, with no new query.
   const [view, setView] = useState<ListView>(() => listViewFromSearch(window.location.search))
 
@@ -81,12 +83,14 @@ function App() {
               order={describeOrder(view)}
               onClearFilters={() => setView({ ...view, gender: DEFAULT_VIEW.gender, query: DEFAULT_VIEW.query })}
               unreadable={data?.unreadable ?? 0}
-              loading={isFetching || range !== settledRange}
+              loading={loading}
               error={error}
               onRetry={() => void refetch()}
             />
             {/* The key comes before the timeline, so readers know what the marks mean before they start reading. */}
             <Legend markGender={view.markGender} />
+            {/* First load: placeholder rows instead of an empty page. */}
+            {!data && !error && <TimelineSkeleton range={settledRange} />}
             {data && shown && shown.length > 0 && (
               // A new order or filter starts the list from the top again (the key makes a fresh timeline).
               <Timeline
@@ -94,6 +98,7 @@ function App() {
                 people={shown}
                 range={data.range}
                 markGender={view.markGender}
+                updating={loading}
               />
             )}
           </div>

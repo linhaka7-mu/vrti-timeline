@@ -20,6 +20,8 @@ interface TimelineProps {
   range: YearRange
   /** "Mark gender" switch: pink bars for women and an F / M badge by every name. */
   markGender: boolean
+  /** A new range is on its way. The people already drawn stay (no flashing), faded, with a moving strip. */
+  updating?: boolean
 }
 
 /**
@@ -29,7 +31,7 @@ interface TimelineProps {
  * "virtualised": only the rows inside the scroll box, plus a few either side, exist in the page.
  * The rest is an empty spacer of the right height, so the scroll bar still behaves normally.
  */
-export function Timeline({ people, range, markGender }: TimelineProps) {
+export function Timeline({ people, range, markGender, updating = false }: TimelineProps) {
   const [scrollTop, setScrollTop] = useState(0)
   const ticks = tickYears(range)
   const bands = eraBands(range)
@@ -40,32 +42,10 @@ export function Timeline({ people, range, markGender }: TimelineProps) {
 
   return (
     <div className="flex flex-col">
-      {/* Year axis. scrollbar-gutter keeps it the same width as the rows below, which may show a scroll bar. */}
-      <div className={`flex overflow-hidden border-b border-copper text-[13px] text-umber [scrollbar-gutter:stable] ${END_GAP}`}>
-        <div className={`${LABEL_WIDTH} shrink-0`} />
-        <div className="relative h-12 flex-1">
-          <EraBands bands={bands} />
-          {/* Era names above the years: each picks the longest label that fits its band
-              (name → short → abbreviation → nothing), like the era buttons do. The full name is in the tooltip. */}
-          {bands.map((band) => (
-            <EraName key={band.name} band={band} />
-          ))}
-          {/* Years sit on a 60% white box, so a line passing behind (an era boundary) does not cut
-              through the number. Half see-through, so it works on parchment and on the straw bands alike. */}
-          {ticks.map((year) => (
-            <span
-              key={year}
-              className="absolute bottom-1 -translate-x-1/2 rounded-[3px] bg-white/60 px-1 leading-tight"
-              style={{ left: `${toPercent(year, range)}%` }}
-            >
-              {year}
-            </span>
-          ))}
-        </div>
-      </div>
+      <Axis range={range} ticks={ticks} bands={bands} updating={updating} />
 
       <div
-        className="overflow-y-auto [scrollbar-gutter:stable]"
+        className={`overflow-y-auto transition-opacity duration-200 [scrollbar-gutter:stable] ${updating ? 'opacity-55' : ''}`}
         style={{ height: Math.min(VIEW_HEIGHT, people.length * ROW_HEIGHT) }}
         onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
       >
@@ -84,6 +64,76 @@ export function Timeline({ people, range, markGender }: TimelineProps) {
           ))}
         </ul>
       </div>
+    </div>
+  )
+}
+
+/**
+ * The year axis: era bands and names, then the years.
+ * scrollbar-gutter keeps it the same width as the rows below, which may show a scroll bar.
+ */
+function Axis({ range, ticks, bands, updating }: { range: YearRange; ticks: number[]; bands: EraBand[]; updating: boolean }) {
+  return (
+    <div className={`relative flex overflow-hidden border-b border-copper text-[13px] text-umber [scrollbar-gutter:stable] ${END_GAP}`}>
+      <div className={`${LABEL_WIDTH} shrink-0`} />
+      <div className="relative h-12 flex-1">
+        <EraBands bands={bands} />
+        {/* Era names above the years: each picks the longest label that fits its band
+            (name → short → abbreviation → nothing), like the era buttons do. The full name is in the tooltip. */}
+        {bands.map((band) => (
+          <EraName key={band.name} band={band} />
+        ))}
+        {/* Years sit on a 60% white box, so a line passing behind (an era boundary) does not cut
+            through the number. Half see-through, so it works on parchment and on the straw bands alike. */}
+        {ticks.map((year) => (
+          <span
+            key={year}
+            className="absolute bottom-1 -translate-x-1/2 rounded-[3px] bg-white/60 px-1 leading-tight"
+            style={{ left: `${toPercent(year, range)}%` }}
+          >
+            {year}
+          </span>
+        ))}
+      </div>
+      {updating && <div aria-hidden="true" className="updating-strip" />}
+    </div>
+  )
+}
+
+const SKELETON_ROWS = 8
+
+/**
+ * Shown on the first load, before any people have arrived: the real axis for the chosen range and
+ * grey placeholder rows, so the page does not sit empty. The words "Loading people…" are in the
+ * status line above (read out by screen readers); this is only a picture, hidden from them.
+ * The shimmer stops for people who ask their system for reduced motion (see .skeleton in index.css).
+ */
+export function TimelineSkeleton({ range }: { range: YearRange }) {
+  const ticks = tickYears(range)
+  const bands = eraBands(range)
+  return (
+    <div className="flex flex-col" aria-hidden="true">
+      <Axis range={range} ticks={ticks} bands={bands} updating={false} />
+      {Array.from({ length: SKELETON_ROWS }, (_, i) => (
+        <div
+          key={i}
+          className={`flex ${END_GAP} ${i % 2 === 1 ? 'bg-linen/30' : ''}`}
+          style={{ height: ROW_HEIGHT }}
+        >
+          <div className={`${LABEL_WIDTH} flex shrink-0 flex-col justify-center gap-1.5 pr-3 pl-1`}>
+            <div className="skeleton h-3 rounded-sm" style={{ width: `${55 + ((i * 13) % 35)}%` }} />
+            <div className="skeleton h-2 w-2/5 rounded-sm" />
+          </div>
+          <div className="relative flex-1 overflow-hidden">
+            <EraBands bands={bands} />
+            {/* Made-up positions, stepping down to the right like a real list sorted by birth. */}
+            <div
+              className="skeleton absolute top-1/2 h-2.5 -translate-y-1/2"
+              style={{ left: `${4 + i * 10}%`, width: `${18 + ((i * 7) % 16)}%` }}
+            />
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
