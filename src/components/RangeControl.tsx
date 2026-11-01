@@ -7,38 +7,31 @@ interface RangeControlProps {
 }
 
 /**
- * Era labels in three lengths. Eras are drawn to scale, so Post-1922 is only ~6% of the slider:
+ * Which era label each button shows. Eras are drawn to scale, so Post-1922 is only ~6% of the slider:
  * each button picks the longest label that fits its own width (CSS container queries).
- * The widths are per era because the names differ in length. They are the measured text widths
+ * The label texts (name, short, tiny) live in ERAS (lib/range.ts), shared with the timeline's era names.
+ * The widths here are per era because the names differ in length. They are the measured text widths
  * in Alegreya Sans plus ~4px (measured 2026-10-19), compared with the button's inner width.
  * Tailwind only sees class names written out in full, so each one is spelled out here.
  *   full  = name + years · short = shorter name only · tiny = abbreviation
  */
-const ERA_LABELS: Record<string, { short: string; tiny: string; showFull: string; showShort: string; showTiny: string }> = {
+const ERA_BUTTON_FIT: Record<string, { showFull: string; showShort: string; showTiny: string }> = {
   Medieval: {
-    short: 'Medieval',
-    tiny: 'Med.',
     showFull: '@min-[60px]:block',
     showShort: '@min-[52px]:block @min-[60px]:hidden',
     showTiny: '@min-[52px]:hidden',
   },
   'Early Modern': {
-    short: 'E. Modern',
-    tiny: 'E. Mod.',
     showFull: '@min-[78px]:block',
     showShort: '@min-[56px]:block @min-[78px]:hidden',
     showTiny: '@min-[56px]:hidden',
   },
   Modern: {
-    short: 'Modern',
-    tiny: 'Mod.',
     showFull: '@min-[50px]:block',
     showShort: '@min-[44px]:block @min-[50px]:hidden',
     showTiny: '@min-[44px]:hidden',
   },
   'Post-1922': {
-    short: 'Post-1922',
-    tiny: '1923+',
     showFull: '@min-[57px]:block',
     showShort: '@min-[53px]:block @min-[57px]:hidden',
     showTiny: '@min-[53px]:hidden',
@@ -97,7 +90,7 @@ export function RangeControl({ range, onChange }: RangeControlProps) {
       <div className="relative mx-[7px] h-12">
         {ERAS.map((era) => {
           const selected = range.from === era.from && range.to === era.to
-          const labels = ERA_LABELS[era.name]
+          const labels = ERA_BUTTON_FIT[era.name]
           const fullName = `${era.name}, ${era.from} to ${era.to}` // for hover and screen readers, whatever fits on screen
           return (
             <button
@@ -122,10 +115,10 @@ export function RangeControl({ range, onChange }: RangeControlProps) {
                 {era.label}
               </span>
               <span aria-hidden="true" className={`hidden text-[13px] font-bold whitespace-nowrap ${labels.showShort}`}>
-                {labels.short}
+                {era.short}
               </span>
               <span aria-hidden="true" className={`text-xs font-bold whitespace-nowrap ${labels.showTiny}`}>
-                {labels.tiny}
+                {era.tiny}
               </span>
             </button>
           )

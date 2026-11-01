@@ -16,16 +16,20 @@ export interface YearRange {
 export interface Era {
   name: string
   label: string
+  /** Shorter name for narrow places, and an abbreviation for the narrowest. Shared by the era buttons
+   *  and the era names above the timeline, so the two always say the same thing. */
+  short: string
+  tiny: string
   from: number
   to: number
 }
 
 /** Same buckets as kg.virtualtreasury.ie (handbook §2, §4.7). */
 export const ERAS: Era[] = [
-  { name: 'Medieval', label: '400–1499', from: 400, to: 1499 },
-  { name: 'Early Modern', label: '1500–1749', from: 1500, to: 1749 },
-  { name: 'Modern', label: '1750–1922', from: 1750, to: 1922 },
-  { name: 'Post-1922', label: '1923–', from: 1923, to: DOMAIN_END },
+  { name: 'Medieval', label: '400–1499', short: 'Medieval', tiny: 'Med.', from: 400, to: 1499 },
+  { name: 'Early Modern', label: '1500–1749', short: 'E. Modern', tiny: 'E. Mod.', from: 1500, to: 1749 },
+  { name: 'Modern', label: '1750–1922', short: 'Modern', tiny: 'Mod.', from: 1750, to: 1922 },
+  { name: 'Post-1922', label: '1923–', short: 'Post-1922', tiny: '1923+', from: 1923, to: DOMAIN_END },
 ]
 
 export function clampYear(year: number): number {
@@ -81,4 +85,39 @@ export function parseYearText(text: string): number | null {
   const trimmed = text.trim()
   if (!/^\d{1,4}$/.test(trimmed)) return null
   return clampYear(Number(trimmed))
+}
+
+/** One era as it falls on the timeline: where its band starts and how wide it is, in % of the axis. */
+export interface EraBand {
+  name: string
+  /** Position in ERAS. Every second era is shaded, by this number, so an era keeps its look in any range. */
+  index: number
+  left: number
+  width: number
+  /** True when the era begins inside the range: a dashed line marks the boundary. */
+  startsInside: boolean
+}
+
+/**
+ * The eras that overlap the range, clipped to it, for the faint bands behind the timeline
+ * (repeats the era buttons inside the timeline, so the eye knows where an era begins).
+ * An era's last year is inclusive: Early Modern 1500–1749 runs up to the start of 1750.
+ */
+export function eraBands(range: YearRange): EraBand[] {
+  const end = range.to + 1
+  const span = end - range.from
+  return ERAS.flatMap((era, index) => {
+    const start = Math.max(era.from, range.from)
+    const stop = Math.min(era.to + 1, end)
+    if (stop <= start) return []
+    return [
+      {
+        name: era.name,
+        index,
+        left: ((start - range.from) / span) * 100,
+        width: ((stop - start) / span) * 100,
+        startsInside: era.from > range.from,
+      },
+    ]
+  })
 }

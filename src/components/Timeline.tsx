@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ageAtDeath } from '../lib/dates'
 import { lifeBarSegments, lifeYears, toPercent, type Segment } from '../lib/geometry'
 import type { Gender, Person } from '../lib/people'
-import { tickYears, type YearRange } from '../lib/range'
+import { ERAS, eraBands, tickYears, type EraBand, type YearRange } from '../lib/range'
 import { GenderBadge } from './GenderBadge'
 
 const ROW_HEIGHT = 44 // px; every row is the same height, which makes the scrolling maths simple
@@ -32,6 +32,7 @@ interface TimelineProps {
 export function Timeline({ people, range, markGender }: TimelineProps) {
   const [scrollTop, setScrollTop] = useState(0)
   const ticks = tickYears(range)
+  const bands = eraBands(range)
 
   const first = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN)
   const last = Math.min(people.length, Math.ceil((scrollTop + VIEW_HEIGHT) / ROW_HEIGHT) + OVERSCAN)
@@ -42,11 +43,19 @@ export function Timeline({ people, range, markGender }: TimelineProps) {
       {/* Year axis. scrollbar-gutter keeps it the same width as the rows below, which may show a scroll bar. */}
       <div className={`flex overflow-hidden border-b border-copper text-[13px] text-umber [scrollbar-gutter:stable] ${END_GAP}`}>
         <div className={`${LABEL_WIDTH} shrink-0`} />
-        <div className="relative h-6 flex-1">
+        <div className="relative h-12 flex-1">
+          <EraBands bands={bands} />
+          {/* Era names above the years: each picks the longest label that fits its band
+              (name → short → abbreviation → nothing), like the era buttons do. The full name is in the tooltip. */}
+          {bands.map((band) => (
+            <EraName key={band.name} band={band} />
+          ))}
+          {/* Years sit on a 60% white box, so a line passing behind (an era boundary) does not cut
+              through the number. Half see-through, so it works on parchment and on the straw bands alike. */}
           {ticks.map((year) => (
             <span
               key={year}
-              className="absolute top-0 -translate-x-1/2"
+              className="absolute bottom-1 -translate-x-1/2 rounded-[3px] bg-white/60 px-1 leading-tight"
               style={{ left: `${toPercent(year, range)}%` }}
             >
               {year}
@@ -70,6 +79,7 @@ export function Timeline({ people, range, markGender }: TimelineProps) {
               top={(first + i) * ROW_HEIGHT}
               striped={(first + i) % 2 === 1}
               markGender={markGender}
+              bands={bands}
             />
           ))}
         </ul>
@@ -85,9 +95,10 @@ interface PersonRowProps {
   top: number
   striped: boolean
   markGender: boolean
+  bands: EraBand[]
 }
 
-function PersonRow({ person, range, ticks, top, striped, markGender }: PersonRowProps) {
+function PersonRow({ person, range, ticks, top, striped, markGender, bands }: PersonRowProps) {
   // People without a recorded gender get no badge and keep the plain blue bar.
   const gender = markGender ? person.gender : undefined
   const { birth, death } = person
@@ -125,6 +136,7 @@ function PersonRow({ person, range, ticks, top, striped, markGender }: PersonRow
       </div>
 
       <div className="relative flex-1 overflow-hidden">
+        <EraBands bands={bands} />
         {ticks.map((year) => (
           <div
             key={year}
@@ -138,6 +150,56 @@ function PersonRow({ person, range, ticks, top, striped, markGender }: PersonRow
       </div>
     </li>
   )
+}
+
+/**
+ * Which era name fits a band of a given width. Widths are the label widths in Cormorant Garamond
+ * 600 at 15px (measured 2026-11-01 with the font files) plus ~3px, compared with the band's width
+ * minus its 6px left padding. Below the smallest one nothing is written; the band still shows.
+ * Short names that equal the full name (Medieval, Modern, Post-1922) skip that step.
+ */
+const ERA_NAME_FIT: Record<string, { name: string; short: string; tiny: string }> = {
+  Medieval: { name: '@min-[57px]:block', short: '', tiny: '@min-[33px]:block @min-[57px]:hidden' },
+  'Early Modern': {
+    name: '@min-[85px]:block',
+    short: '@min-[66px]:block @min-[85px]:hidden',
+    tiny: '@min-[49px]:block @min-[66px]:hidden',
+  },
+  Modern: { name: '@min-[51px]:block', short: '', tiny: '@min-[34px]:block @min-[51px]:hidden' },
+  'Post-1922': { name: '@min-[58px]:block', short: '', tiny: '@min-[33px]:block @min-[58px]:hidden' },
+}
+
+function EraName({ band }: { band: EraBand }) {
+  const era = ERAS[band.index]
+  const fit = ERA_NAME_FIT[era.name]
+  return (
+    <span
+      title={`${era.name}, ${era.label}`}
+      className="@container absolute top-1 overflow-hidden pl-1.5 font-display text-[15px] leading-tight font-semibold whitespace-nowrap text-bottle/85"
+      style={{ left: `${band.left}%`, width: `${band.width}%` }}
+    >
+      <span className={`hidden ${fit.name}`}>{era.name}</span>
+      {fit.short && <span className={`hidden ${fit.short}`}>{era.short}</span>}
+      <span className={`hidden ${fit.tiny}`}>{era.tiny}</span>
+    </span>
+  )
+}
+
+/**
+ * Faint era bands behind the axis and every row: every second era (by its place in ERAS) is shaded
+ * straw, and a dashed line marks where an era begins inside the range. Drawn under the grid and bars.
+ */
+function EraBands({ bands }: { bands: EraBand[] }) {
+  return bands.map((band) => (
+    <div
+      key={band.name}
+      aria-hidden="true"
+      className={`absolute inset-y-0 ${band.index % 2 === 1 ? 'bg-straw/25' : ''} ${
+        band.startsInside ? 'border-l border-dashed border-bottle/35' : ''
+      }`}
+      style={{ left: `${band.left}%`, width: `${band.width}%` }}
+    />
+  ))
 }
 
 /**

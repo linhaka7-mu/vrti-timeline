@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normaliseRange, parseYearText, rangeFromSearch, rangeLength, rangeToSearch, tickYears } from './range'
+import { eraBands, normaliseRange, parseYearText, rangeFromSearch, rangeLength, rangeToSearch, tickYears } from './range'
 
 describe('normaliseRange', () => {
   it('clamps to the slider domain and puts the ends in order', () => {
@@ -54,5 +54,23 @@ describe('parseYearText', () => {
     expect(parseYearText('16th c.')).toBeNull()
     expect(parseYearText('1641.5')).toBeNull()
     expect(parseYearText('-50')).toBeNull()
+  })
+})
+
+describe('eraBands', () => {
+  it('a range inside one era gives one full-width band', () => {
+    expect(eraBands({ from: 1500, to: 1749 })).toEqual([
+      { name: 'Early Modern', index: 1, left: 0, width: 100, startsInside: false },
+    ])
+  })
+  it('clips eras to the range and marks where a new era begins', () => {
+    const bands = eraBands({ from: 1400, to: 1799 })
+    expect(bands.map((b) => b.name)).toEqual(['Medieval', 'Early Modern', 'Modern'])
+    expect(bands[0]).toMatchObject({ left: 0, width: 25, startsInside: false }) // 1400–1499: 100 of 400 years
+    expect(bands[1]).toMatchObject({ left: 25, width: 62.5, startsInside: true }) // 1500–1749
+    expect(bands[2]).toMatchObject({ left: 87.5, width: 12.5, startsInside: true }) // 1750–1799
+  })
+  it('a one-year range on an era boundary belongs to one era only', () => {
+    expect(eraBands({ from: 1750, to: 1750 }).map((b) => b.name)).toEqual(['Modern'])
   })
 })
