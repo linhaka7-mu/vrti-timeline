@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Legend } from './components/Legend'
 import { ListControls } from './components/ListControls'
+import { CornerFringe, StarDivider } from './components/Ornaments'
 import { RangeControl } from './components/RangeControl'
 import { StatusLine } from './components/StatusLine'
 import { Timeline, TimelineSkeleton } from './components/Timeline'
@@ -49,9 +50,13 @@ function App() {
     window.history.replaceState(null, '', viewToSearch(settledRange, view))
   }, [settledRange, view])
 
+  // No background colour on the outer box: the green and its grain come from <html> (index.css).
   return (
-    <div className="min-h-screen bg-bottle p-4 sm:p-7">
-      <div className="mx-auto flex max-w-[1384px] flex-col gap-7 rounded-md border-2 border-copper bg-paper px-5 py-8 outline outline-1 -outline-offset-[12px] outline-dashed outline-copper sm:px-13 sm:py-11">
+    <div className="min-h-screen p-4 sm:p-7">
+      {/* The top padding is deeper than the bottom, to leave room for the corner fringes. */}
+      <div className="paper relative mx-auto flex max-w-[1384px] flex-col gap-7 rounded-md border-2 border-copper px-5 pt-12 pb-8 outline outline-1 -outline-offset-[12px] outline-dashed outline-copper sm:px-13 sm:pt-[60px] sm:pb-11">
+        <CornerFringe side="left" />
+        <CornerFringe side="right" />
         <header className="flex flex-wrap items-end justify-between gap-4 border-b border-copper pb-4">
           <div className="flex flex-col gap-1">
             <p className="m-0 text-[13px] uppercase tracking-[0.14em] text-umber">
@@ -73,7 +78,8 @@ function App() {
 
         <main className="flex flex-col gap-6">
           <RangeControl range={range} onChange={setRange} />
-          <div className="flex flex-col gap-4 border-t border-copper pt-5">
+          <StarDivider />
+          <div className="flex flex-col gap-4">
             <ListControls view={view} onChange={setView} counts={counts} />
             <StatusLine
               range={data?.range ?? settledRange}

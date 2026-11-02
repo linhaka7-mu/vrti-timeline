@@ -35,9 +35,20 @@
   --font-sans: 'Alegreya Sans', 'Gill Sans', sans-serif;
 }
 
+/*
+ * Paper grain (2026-11-02): a 200 × 200 tile of SVG noise, repeated. No image file.
+ * The grain's opacity (about 10% at its strongest) is baked into the tile, so it sits on top of
+ * whatever colour is underneath: dark grain on the paper, light grain on the green frame.
+ * It covers the whole card, timeline included; the bars and text are solid, so it stays behind them.
+ */
+:root {
+  --grain-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.2 0 0 0 -0.05'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  --grain-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.2 0 0 0 -0.05'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 @layer base {
   html {
-    background: var(--color-bottle);
+    background: var(--grain-light) var(--color-bottle);
   }
   body {
     margin: 0;
@@ -110,6 +121,11 @@
    * .updating-strip: a thin strip under the year axis while a new range loads, with a moving segment.
    * Both stand still for people who ask their system for reduced motion.
    */
+  /* The card: parchment with dark grain on top. */
+  .paper {
+    background: var(--grain-dark) var(--color-paper);
+  }
+
   .skeleton {
     background: var(--color-linen);
   }
