@@ -22,12 +22,15 @@ export interface ListView {
   gender: GenderFilter
   /** Name search, as typed. Empty means no search. */
   query: string
-  /** "Mark gender": women's bars in pink and an F / M badge by each name. Off by default. */
+  /**
+   * "Mark gender": women's bars in pink and an F / M badge by each name.
+   * On by default since 2026-11-02 (supervisor: it is clearer and more interesting at a glance; people can switch it off).
+   */
   markGender: boolean
 }
 
 /** Earliest birth first: the order the timeline has always used, now stated on the page. */
-export const DEFAULT_VIEW: ListView = { sort: 'birth', direction: 'asc', gender: 'all', query: '', markGender: false }
+export const DEFAULT_VIEW: ListView = { sort: 'birth', direction: 'asc', gender: 'all', query: '', markGender: true }
 
 export const SORT_KEYS: SortKey[] = ['birth', 'death', 'surname', 'forename', 'age']
 
@@ -144,8 +147,10 @@ export function applyListView(people: Person[], view: ListView): Person[] {
 }
 
 /**
- * Reads the list settings from the page address (?sort=surname&dir=desc&gender=female&q=…&marks=gender),
+ * Reads the list settings from the page address (?sort=surname&dir=desc&gender=female&q=…&marks=none),
  * so a filtered view can be shared like a range can. Anything unknown falls back to the default.
+ * "Mark gender" is on by default, so only switching it off is written (marks=none). Older links with
+ * marks=gender, from when it was off by default, still open with it on.
  */
 export function listViewFromSearch(search: string): ListView {
   const params = new URLSearchParams(search)
@@ -157,8 +162,14 @@ export function listViewFromSearch(search: string): ListView {
     direction: dir === 'asc' || dir === 'desc' ? dir : DEFAULT_VIEW.direction,
     gender: gender === 'female' || gender === 'male' ? gender : DEFAULT_VIEW.gender,
     query: params.get('q') ?? DEFAULT_VIEW.query,
-    markGender: params.get('marks') === 'gender',
+    markGender: marksFromParam(params.get('marks')),
   }
+}
+
+function marksFromParam(value: string | null): boolean {
+  if (value === 'gender') return true
+  if (value === 'none') return false
+  return DEFAULT_VIEW.markGender
 }
 
 /** The full address for a range plus list settings. Settings left at their default are left out. */
@@ -168,6 +179,6 @@ export function viewToSearch({ from, to }: YearRange, view: ListView): string {
   if (view.direction !== DEFAULT_VIEW.direction) params.set('dir', view.direction)
   if (view.gender !== DEFAULT_VIEW.gender) params.set('gender', view.gender)
   if (view.query.trim()) params.set('q', view.query.trim())
-  if (view.markGender) params.set('marks', 'gender')
+  if (view.markGender !== DEFAULT_VIEW.markGender) params.set('marks', view.markGender ? 'gender' : 'none')
   return `?${params.toString()}`
 }

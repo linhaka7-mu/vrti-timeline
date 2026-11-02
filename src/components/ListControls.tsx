@@ -97,7 +97,7 @@ export function ListControls({ view, onChange, counts }: ListControlsProps) {
         </div>
       </fieldset>
 
-      {/* "Mark gender": off by default, so the everyday view keeps one colour for people.
+      {/* "Mark gender": on by default (supervisor, 2026-11-02), so women stand out at a glance; switch off for one colour.
           The outline is drawn inside the track (an inset ring, not a border), so it takes no space. */}
       <label className="flex cursor-pointer items-center gap-2.5 text-umber">
         <input

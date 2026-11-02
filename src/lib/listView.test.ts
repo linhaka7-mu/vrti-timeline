@@ -107,14 +107,21 @@ describe('address', () => {
     expect(viewToSearch({ from: 1500, to: 1749 }, DEFAULT_VIEW)).toBe('?from=1500&to=1749')
   })
   it('round-trips every setting, including accented searches', () => {
-    const view: ListView = { sort: 'surname', direction: 'desc', gender: 'female', query: 'Ní Bhriain', markGender: true }
+    const view: ListView = { sort: 'surname', direction: 'desc', gender: 'female', query: 'Ní Bhriain', markGender: false }
     const search = viewToSearch({ from: 1500, to: 1749 }, view)
     expect(listViewFromSearch(search)).toEqual(view)
   })
   it('ignores values it does not know', () => {
     expect(listViewFromSearch('?sort=height&dir=up&gender=x&marks=yes')).toEqual(DEFAULT_VIEW)
   })
-  it('writes "Mark gender" as marks=gender', () => {
-    expect(viewToSearch({ from: 1500, to: 1749 }, { ...DEFAULT_VIEW, markGender: true })).toBe('?from=1500&to=1749&marks=gender')
+  it('has "Mark gender" on by default and writes switching it off as marks=none', () => {
+    expect(DEFAULT_VIEW.markGender).toBe(true)
+    expect(listViewFromSearch('?from=1500&to=1749').markGender).toBe(true)
+    const off = { ...DEFAULT_VIEW, markGender: false }
+    expect(viewToSearch({ from: 1500, to: 1749 }, off)).toBe('?from=1500&to=1749&marks=none')
+    expect(listViewFromSearch('?from=1500&to=1749&marks=none')).toEqual(off)
+  })
+  it('still opens older marks=gender links with "Mark gender" on', () => {
+    expect(listViewFromSearch('?from=1500&to=1749&marks=gender').markGender).toBe(true)
   })
 })

@@ -46,7 +46,7 @@ function along(year: number): number {
 /**
  * Choosing a time range (handbook §4.7): three handles on ONE range, not three separate searches.
  * Dragging the slider changes the year boxes; typing a year moves the slider; clicking an era moves both.
- * That is why they sit together as one control.
+ * That is why they sit together as one control. Order: era buttons, then the slider and the year boxes they move.
  */
 export function RangeControl({ range, onChange }: RangeControlProps) {
   const setFrom = (from: number) => onChange({ from: Math.min(from, range.to), to: range.to })
@@ -54,39 +54,7 @@ export function RangeControl({ range, onChange }: RangeControlProps) {
 
   return (
     <section aria-label="Choose a time range" className="flex flex-col gap-2">
-      {/* 1 · The slider. Two native range inputs share one track, so keyboards and screen readers work as usual. */}
-      <div className="relative h-6">
-        {/* The thumbs are 14px wide and their centres travel 7px in from each end, hence mx-[7px]. */}
-        <div className="absolute inset-x-[7px] top-0 h-6">
-          <div className="absolute inset-x-0 top-[9px] h-1.5 rounded-full bg-linen" />
-          <div
-            className="absolute top-[7px] h-2.5 rounded-sm bg-bottle"
-            style={{ left: `${along(range.from)}%`, width: `${along(range.to) - along(range.from)}%` }}
-          />
-        </div>
-        <input
-          type="range"
-          aria-label="Start year"
-          min={DOMAIN_START}
-          max={DOMAIN_END}
-          value={range.from}
-          onChange={(event) => setFrom(Number(event.target.value))}
-          className="dual-range absolute inset-0"
-          // When both handles reach the right-hand end, the start handle must be on top or it could never move back.
-          style={{ zIndex: range.from > DOMAIN_END - 100 ? 3 : 2 }}
-        />
-        <input
-          type="range"
-          aria-label="End year"
-          min={DOMAIN_START}
-          max={DOMAIN_END}
-          value={range.to}
-          onChange={(event) => setTo(Number(event.target.value))}
-          className="dual-range absolute inset-0"
-        />
-      </div>
-
-      {/* 2 · The eras, drawn to scale under the slider: Medieval really is 1,100 years wide. */}
+      {/* 1 · The eras come first: they are the obvious thing to click. Drawn to scale: Medieval really is 1,100 years wide. */}
       <div className="relative mx-[7px] h-12">
         {ERAS.map((era) => {
           const selected = range.from === era.from && range.to === era.to
@@ -124,6 +92,39 @@ export function RangeControl({ range, onChange }: RangeControlProps) {
           )
         })}
       </div>
+      {/* 2 · The slider, under the era buttons, so clicking an era visibly moves it (supervisor, 2026-11-02).
+          Two native range inputs share one track, so keyboards and screen readers work as usual. */}
+      <div className="relative h-6">
+        {/* The thumbs are 14px wide and their centres travel 7px in from each end, hence mx-[7px]. */}
+        <div className="absolute inset-x-[7px] top-0 h-6">
+          <div className="absolute inset-x-0 top-[9px] h-1.5 rounded-full bg-linen" />
+          <div
+            className="absolute top-[7px] h-2.5 rounded-sm bg-bottle"
+            style={{ left: `${along(range.from)}%`, width: `${along(range.to) - along(range.from)}%` }}
+          />
+        </div>
+        <input
+          type="range"
+          aria-label="Start year"
+          min={DOMAIN_START}
+          max={DOMAIN_END}
+          value={range.from}
+          onChange={(event) => setFrom(Number(event.target.value))}
+          className="dual-range absolute inset-0"
+          // When both handles reach the right-hand end, the start handle must be on top or it could never move back.
+          style={{ zIndex: range.from > DOMAIN_END - 100 ? 3 : 2 }}
+        />
+        <input
+          type="range"
+          aria-label="End year"
+          min={DOMAIN_START}
+          max={DOMAIN_END}
+          value={range.to}
+          onChange={(event) => setTo(Number(event.target.value))}
+          className="dual-range absolute inset-0"
+        />
+      </div>
+
       <div className="mx-[7px] flex justify-between text-[13px] text-umber" aria-hidden="true">
         <span>{DOMAIN_START}</span>
         <span>{DOMAIN_END}</span>
