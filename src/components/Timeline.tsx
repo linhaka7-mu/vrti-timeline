@@ -255,6 +255,10 @@ function EraBands({ bands }: { bands: EraBand[] }) {
 /**
  * One piece of a lifetime bar. Light pieces get an outline so they stay visible on parchment.
  * Lightness always means certainty; with "Mark gender" on, the hue says woman (pink) or man (blue).
+ * Light pieces are also taller (14px against the bar's 10px), so they stick out above and below.
+ * Supervisor 2026-11-02: one year is only ~3.6px wide at 1500–1749, so a light end was easy to miss.
+ * Their width still shows the real uncertain span (handbook §4); only the height changed (sketch
+ * page 2026-11-02, option G, chosen by Siyan).
  */
 function Bar({ segment, gender }: { segment: Segment; gender?: Gender }) {
   const woman = gender === 'female'
@@ -268,7 +272,7 @@ function Bar({ segment, gender }: { segment: Segment; gender?: Gender }) {
         : 'bg-person-light border border-person'
   return (
     <div
-      className={`absolute top-1/2 h-2.5 -translate-y-1/2 box-border ${look}`}
+      className={`absolute top-1/2 -translate-y-1/2 box-border ${segment.kind === 'certain' ? 'h-2.5' : 'h-3.5'} ${look}`}
       style={{ left: `${segment.left}%`, width: `${segment.width}%` }}
     />
   )
