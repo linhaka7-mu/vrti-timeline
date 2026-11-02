@@ -125,7 +125,7 @@ export function RangeControl({ range, onChange }: RangeControlProps) {
         />
       </div>
 
-      <div className="mx-[7px] flex justify-between text-[13px] text-umber" aria-hidden="true">
+      <div className="mx-[7px] flex justify-between font-type text-[13px] text-umber" aria-hidden="true">
         <span>{DOMAIN_START}</span>
         <span>{DOMAIN_END}</span>
       </div>
@@ -134,7 +134,7 @@ export function RangeControl({ range, onChange }: RangeControlProps) {
       <div className="mt-1 flex flex-wrap items-center gap-3 text-base">
         <YearInput key={`from-${range.from}`} label="From" value={range.from} onCommit={setFrom} />
         <YearInput key={`to-${range.to}`} label="to" value={range.to} onCommit={setTo} />
-        <span className="text-sm text-umber">{rangeLength(range).toLocaleString('en-IE')} years</span>
+        <span className="font-type text-sm text-umber">{rangeLength(range).toLocaleString('en-IE')} years</span>
       </div>
     </section>
   )
@@ -175,7 +175,7 @@ function YearInput({ label, value, onCommit }: YearInputProps) {
           // That Enter must not apply the year yet, or the letters land in the box afterwards.
           if (event.key === 'Enter' && !event.nativeEvent.isComposing) commit()
         }}
-        className="h-11 w-24 rounded border-[1.5px] border-umber bg-white px-3 text-[17px] text-ink"
+        className="h-11 w-24 rounded border-[1.5px] border-umber bg-white px-3 font-type text-[17px] text-ink"
       />
     </label>
   )

@@ -88,7 +88,7 @@ function Axis({ range, ticks, bands, updating }: { range: YearRange; ticks: numb
         {ticks.map((year) => (
           <span
             key={year}
-            className="absolute bottom-1 -translate-x-1/2 rounded-[3px] bg-white/60 px-1 leading-tight"
+            className="absolute bottom-1 -translate-x-1/2 rounded-[3px] bg-white/60 px-1 font-type leading-tight"
             style={{ left: `${toPercent(year, range)}%` }}
           >
             {year}
@@ -177,7 +177,7 @@ function PersonRow({ person, range, ticks, top, striped, markGender, bands }: Pe
             {person.name}
           </a>
         </div>
-        <span className="truncate text-[12.5px] leading-tight text-umber" title={meta}>
+        <span className="truncate font-type text-[12.5px] leading-tight text-umber" title={meta}>
           {lifeYears(birth, death)}
           {!deathBeforeBirth && ` · ${ageText}`}
           {/* Data problems are written out, not coloured: record colours belong to the data marks. */}

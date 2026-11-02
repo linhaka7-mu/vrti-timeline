@@ -33,6 +33,25 @@
 
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Alegreya Sans', 'Gill Sans', sans-serif;
+  /* Typewriter, only for archive labels and numbers: the header label, the Prototype stamp, the date
+     line under each name, the year labels and the year boxes. Names, controls and running text stay
+     in Alegreya Sans for reading (sketch page 2026-11-02, chosen by Siyan). Special Elite: Apache 2.0,
+     has the Irish accented letters, – and ·. */
+  --font-type: 'Special Elite', 'Courier New', monospace;
+}
+
+/*
+ * Special Elite, re-centred (2026-11-02). In the original file the figures sat about 0.15 em above the
+ * middle of the line, so typed years looked raised in their boxes. Only the vertical metrics were
+ * changed; the letters are untouched (Apache 2.0, see src/assets/fonts/README.md). Latin subset,
+ * which includes the Irish accented letters and – · ’.
+ */
+@font-face {
+  font-family: 'Special Elite';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/special-elite-latin-centred.woff2') format('woff2');
 }
 
 /*

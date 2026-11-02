@@ -59,15 +59,15 @@ function App() {
         <CornerFringe side="right" />
         <header className="flex flex-wrap items-end justify-between gap-4 border-b border-copper pb-4">
           <div className="flex flex-col gap-1">
-            <p className="m-0 text-[13px] uppercase tracking-[0.14em] text-umber">
+            <p className="m-0 font-type text-[13px] uppercase tracking-[0.14em] text-umber">
               Virtual Record Treasury of Ireland · Knowledge Graph
             </p>
-            <h1 className="m-0 font-display text-4xl leading-tight font-semibold text-bottle sm:text-[46px]">
+            <h1 className="m-0 text-4xl leading-tight font-bold text-bottle sm:text-[46px]">
               People in Time
             </h1>
           </div>
           <div className="flex items-center gap-4 text-[15px]">
-            <span className="rounded-sm border border-umber px-2 py-0.5 text-xs uppercase tracking-[0.08em] text-umber">
+            <span className="rounded-sm border border-umber px-2 py-0.5 font-type text-xs uppercase tracking-[0.08em] text-umber">
               Prototype
             </span>
             <a href="https://kg.virtualtreasury.ie/" className="font-medium whitespace-nowrap">
