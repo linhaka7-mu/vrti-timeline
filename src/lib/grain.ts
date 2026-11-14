@@ -21,7 +21,13 @@ export const GRAIN = {
 } as const
 
 /** RGBA pixels for one tile: each pixel black or white, opacity between 0 and maxAlpha. */
-export function grainPixels(size: number, maxAlpha: number, blackShare: number, seed: number): Uint8ClampedArray {
+// The return type names ArrayBuffer so that ImageData accepts it (a SharedArrayBuffer would not be allowed).
+export function grainPixels(
+  size: number,
+  maxAlpha: number,
+  blackShare: number,
+  seed: number,
+): Uint8ClampedArray<ArrayBuffer> {
   const random = seededRandom(seed)
   const data = new Uint8ClampedArray(size * size * 4)
   for (let i = 0; i < data.length; i += 4) {
