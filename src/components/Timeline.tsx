@@ -398,7 +398,7 @@ function PersonRow({
           />
         ))}
         {segments.map((segment, i) => (
-          <Bar key={i} segment={segment} gender={gender} faded={faded} />
+          <Bar key={i} segment={segment} gender={gender} faded={faded} emphasised={highlighted} />
         ))}
         {/* The hover area: the bar's own length (at least 12px wide, so very short bars can be hit),
             24px high. Hovering shows the person card, clicking pins it. Keyboard and screen-reader users
@@ -477,7 +477,19 @@ function EraBands({ bands }: { bands: EraBand[] }) {
  * Their width still shows the real uncertain span (handbook §4); only the height changed (sketch
  * page 2026-11-02, option G, chosen by Siyan).
  */
-function Bar({ segment, gender, faded }: { segment: Segment; gender?: Gender; faded: boolean }) {
+function Bar({
+  segment,
+  gender,
+  faded,
+  emphasised,
+}: {
+  segment: Segment
+  gender?: Gender
+  faded: boolean
+  /** This person's card is open: the whole bar grows a little (10/14px → 12/17px), keeping the
+   *  light ends taller than the dark part, so the card is clearly tied to this bar (Siyan, 2026-11-14). */
+  emphasised: boolean
+}) {
   const woman = gender === 'female'
   const look =
     segment.kind === 'certain'
@@ -487,9 +499,11 @@ function Bar({ segment, gender, faded }: { segment: Segment; gender?: Gender; fa
       : woman
         ? 'bg-woman-light border border-woman'
         : 'bg-person-light border border-person'
+  const height =
+    segment.kind === 'certain' ? (emphasised ? 'h-3' : 'h-2.5') : emphasised ? 'h-[17px]' : 'h-3.5'
   return (
     <div
-      className={`absolute top-1/2 -translate-y-1/2 box-border transition-opacity duration-150 ${segment.kind === 'certain' ? 'h-2.5' : 'h-3.5'} ${look} ${faded ? 'opacity-30' : ''}`}
+      className={`absolute top-1/2 -translate-y-1/2 box-border transition-[height,opacity] duration-150 motion-reduce:transition-none ${height} ${look} ${faded ? 'opacity-30' : ''}`}
       style={{ left: `${segment.left}%`, width: `${segment.width}%` }}
     />
   )
