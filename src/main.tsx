@@ -10,6 +10,10 @@ import '@fontsource/alegreya-sans/700.css'
 import '@fontsource/cormorant-garamond/600.css'
 import './index.css'
 import App from './App.tsx'
+import { installGrain } from './lib/grain'
+
+// Paper grain for the frame and the card (lib/grain.ts).
+installGrain()
 
 // One shared cache for every query the page makes (see hooks/usePeopleAlive.ts).
 const queryClient = new QueryClient()
