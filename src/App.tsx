@@ -67,9 +67,6 @@ function App() {
             </h1>
           </div>
           <div className="flex items-center gap-4 text-[15px]">
-            <span className="rounded-sm border border-umber px-2 py-0.5 font-type text-xs uppercase tracking-[0.08em] text-umber">
-              Prototype
-            </span>
             <a href="https://kg.virtualtreasury.ie/" className="font-medium whitespace-nowrap">
               Open the Knowledge Graph ↗
             </a>

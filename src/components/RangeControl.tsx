@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { DOMAIN_END, DOMAIN_START, ERAS, parseYearText, rangeLength, type YearRange } from '../lib/range'
+import { DensityChart } from './DensityChart'
 
 interface RangeControlProps {
   range: YearRange
@@ -46,7 +47,7 @@ function along(year: number): number {
 /**
  * Choosing a time range (handbook §4.7): three handles on ONE range, not three separate searches.
  * Dragging the slider changes the year boxes; typing a year moves the slider; clicking an era moves both.
- * That is why they sit together as one control. Order: era buttons, then the slider and the year boxes they move.
+ * That is why they sit together as one control. Order: density chart, era buttons, then the slider and the year boxes they move.
  */
 export function RangeControl({ range, onChange }: RangeControlProps) {
   const setFrom = (from: number) => onChange({ from: Math.min(from, range.to), to: range.to })
@@ -54,7 +55,13 @@ export function RangeControl({ range, onChange }: RangeControlProps) {
 
   return (
     <section aria-label="Choose a time range" className="flex flex-col gap-2">
-      {/* 1 · The eras come first: they are the obvious thing to click. Drawn to scale: Medieval really is 1,100 years wide. */}
+      {/* 0 · How many people each decade holds, on the same scale as the eras and the slider,
+          so people can see where the data is before they choose (sketch page 2026-11-14, option D).
+          It sits above the era buttons so the buttons stay right next to the slider they move (Siyan, 2026-11-14). */}
+      <div className="relative mx-[7px] h-10">
+        <DensityChart range={range} />
+      </div>
+      {/* 1 · The eras: they are the obvious thing to click. Drawn to scale: Medieval really is 1,100 years wide. */}
       <div className="relative mx-[7px] h-12">
         {ERAS.map((era) => {
           const selected = range.from === era.from && range.to === era.to
