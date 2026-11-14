@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { toInterval } from './dates'
-import { lifeBarSegments, lifeYears, toPercent } from './geometry'
+import { lifeBarSegments, lifeYears, mayBeAliveIn, toPercent, yearAt } from './geometry'
 
 const span = (a: string, b: string) => toInterval(a, b)!
 const EARLY_MODERN = { from: 1500, to: 1749 }
@@ -41,5 +41,30 @@ describe('lifeYears', () => {
   it('shows the first possible birth year and the last possible death year', () => {
     expect(lifeYears(span('1544-01-01', '1544-12-31'), span('1602-01-01', '1602-12-31'))).toBe('1544–1602')
     expect(lifeYears(span('1688-02-14', '1688-02-14'), span('1723-06-02', '1723-06-02'))).toBe('1688–1723')
+  })
+})
+
+describe('yearAt', () => {
+  it('turns a place across the row into a year', () => {
+    expect(yearAt(0, EARLY_MODERN)).toBe(1500)
+    expect(yearAt(0.5, EARLY_MODERN)).toBe(1625)
+    expect(yearAt(0.9999, EARLY_MODERN)).toBe(1749)
+  })
+  it('never goes past the last year of the range', () => {
+    expect(yearAt(1, EARLY_MODERN)).toBe(1749)
+  })
+})
+
+describe('mayBeAliveIn', () => {
+  // Christopher Nugent: born some time in 1544, died some time in 1602.
+  const birth = span('1544-01-01', '1544-12-31')
+  const death = span('1602-01-01', '1602-12-31')
+  it('counts the uncertain birth and death years as possibly alive', () => {
+    expect(mayBeAliveIn(birth, death, 1544)).toBe(true)
+    expect(mayBeAliveIn(birth, death, 1602)).toBe(true)
+  })
+  it('is false before the birth year and after the death year', () => {
+    expect(mayBeAliveIn(birth, death, 1543)).toBe(false)
+    expect(mayBeAliveIn(birth, death, 1603)).toBe(false)
   })
 })

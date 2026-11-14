@@ -145,6 +145,8 @@
   .paper {
     background-color: var(--color-paper);
   }
+  /* The same grain on top of the person card (components/PersonCard.tsx), green header included. */
+  .grain-over::after,
   .paper::after {
     content: '';
     position: absolute;
@@ -200,5 +202,22 @@
   }
   to {
     left: 100%;
+  }
+}
+
+/* The person card fades in (components/PersonCard.tsx); no movement for people who ask for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .card-in {
+    animation: card-in 0.14s ease-out;
+  }
+}
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }

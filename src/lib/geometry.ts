@@ -46,3 +46,20 @@ export function lifeBarSegments(birth: Interval, death: Interval, range: YearRan
 export function lifeYears(birth: Interval, death: Interval): string {
   return `${Math.floor(birth.start)}–${Math.ceil(death.end) - 1}`
 }
+
+/**
+ * The year under the pointer, from how far across the row it is (0 = left edge, 1 = right edge).
+ * Used by the year line that follows the mouse (sketch page 2026-11-01, idea 3).
+ */
+export function yearAt(fraction: number, { from, to }: YearRange): number {
+  return Math.min(to, Math.floor(from + fraction * (to + 1 - from)))
+}
+
+/**
+ * Whether someone may have been alive at some point in a year: their earliest possible birth is
+ * before the year ends, and their latest possible death is after it starts. "May have been",
+ * because light (uncertain) ends count: the year line fades only people certainly not alive then.
+ */
+export function mayBeAliveIn(birth: Interval, death: Interval, year: number): boolean {
+  return birth.start < year + 1 && death.end > year
+}
