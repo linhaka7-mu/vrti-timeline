@@ -98,6 +98,16 @@ describe('toPeople', () => {
     expect(people[0].issues).toContain('death recorded before birth')
   })
 
+  it('flags a lifespan of over 120 years as a likely data error (Ercnait)', () => {
+    const { people } = toPeople([row(ART, ['0400-01-01', '0400-12-31'], ['0600-01-01', '0600-12-31'])])
+    expect(people[0].issues).toContain('age over 120: likely a data error')
+  })
+
+  it('does not flag a long but real life (Katharine Plunket, 111)', () => {
+    const { people } = toPeople([row(ART, ['1820-11-22', '1820-11-22'], ['1932-10-14', '1932-10-14'])])
+    expect(people[0].issues).toEqual([])
+  })
+
   it('flags a second birth record and draws the earlier one', () => {
     const rows = [
       row(ART, ['1580-01-01', '1580-12-31'], ['1645-10-26', '1645-10-26']),

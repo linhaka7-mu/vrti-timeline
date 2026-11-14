@@ -1,4 +1,4 @@
-import { padYear, toInterval, type Interval } from './dates'
+import { ageAtDeath, padYear, toInterval, type Interval } from './dates'
 import { runSelect, type Binding } from './sparql'
 
 /** A person who can be drawn as a lifetime bar: they have both a birth and a death time-span. */
@@ -17,6 +17,13 @@ export interface Person {
   /** Things in the data that do not add up. The timeline shows them instead of hiding them (handbook §3.10–3.11). */
   issues: string[]
 }
+
+/**
+ * No one on record has lived past 122, so a shortest possible lifespan above this is a data error,
+ * not a long life. 120 keeps real cases such as Katharine Plunket (111) unflagged.
+ * In the whole knowledge graph this flags 4 people (checked 2026-11-14; reported to the VRTI data team).
+ */
+export const MAX_PLAUSIBLE_AGE = 120
 
 export interface PeopleResult {
   people: Person[]
@@ -144,6 +151,7 @@ export function toPeople(rows: Binding[]): PeopleResult {
     const birth = births[0]
     const death = deaths[0]
     if (death.end <= birth.start) issues.push('death recorded before birth')
+    else if (ageAtDeath(birth, death).min > MAX_PLAUSIBLE_AGE) issues.push(`age over ${MAX_PLAUSIBLE_AGE}: likely a data error`)
     // None found so far, but if a person is ever typed both ways, say so rather than pick one.
     if (group.genders.size > 1) issues.push('recorded as both female and male')
     const gender = group.genders.size === 1 ? [...group.genders][0] : undefined

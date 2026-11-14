@@ -178,6 +178,14 @@ function PersonRow({ person, range, ticks, top, striped, markGender, bands }: Pe
           </a>
         </div>
         <span className="truncate font-type text-[12.5px] leading-tight text-umber" title={meta}>
+          {/* A warning sign at the start of the line, so it is never cut off by the "…" at the end.
+              It is decorative for screen readers: the problem itself is read out from the text below.
+              U+FE0E asks for the plain text sign, not the coloured emoji. */}
+          {person.issues.length > 0 && (
+            <span aria-hidden="true" className="text-ink not-italic">
+              {'\u26A0\uFE0E '}
+            </span>
+          )}
           {lifeYears(birth, death)}
           {!deathBeforeBirth && ` · ${ageText}`}
           {/* Data problems are written out, not coloured: record colours belong to the data marks. */}
