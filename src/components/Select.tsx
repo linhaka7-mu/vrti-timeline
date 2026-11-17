@@ -181,7 +181,7 @@ export function Select<T extends string>({ value, options, onChange, labelledBy,
           role="listbox"
           aria-labelledby={labelledBy}
           aria-label={labelledBy ? undefined : ariaLabel}
-          className="absolute top-[calc(100%+4px)] left-0 z-20 m-0 max-h-96 min-w-full list-none overflow-y-auto rounded-md border-[1.5px] border-bottle bg-white p-1 shadow-[0_6px_18px_rgb(46_74_51/0.18)]"
+          className="absolute top-[calc(100%+4px)] left-0 z-20 m-0 max-h-96 min-w-full list-none overflow-y-auto rounded border border-umber/45 bg-white p-1 shadow-[0_6px_18px_rgb(46_74_51/0.18)]"
         >
           {options.map((option, i) => {
             const selected = i === selectedIndex
