@@ -1,12 +1,16 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
+import { markEntrySide } from '../lib/hover'
+import { HoverSweep } from './HoverSweep'
 
 export interface SelectOption<T extends string> {
   value: T
   label: string
   /** Shown in the closed box instead of `label`, when the full label is too long for it. */
   short?: string
-  /** Listed but greyed out and not choosable (for example a data source with nobody in the range). */
+  /** Listed but greyed out and not choosable. */
   disabled?: boolean
+  /** Choosable, but in a paler colour (a data source with nobody in the range: choosing it explains why). */
+  muted?: boolean
 }
 
 interface SelectProps<T extends string> {
@@ -197,20 +201,22 @@ export function Select<T extends string>({ value, options, onChange, labelledBy,
                 onPointerDown={(event) => event.preventDefault()}
                 onClick={() => choose(i)}
                 onPointerMove={() => !option.disabled && setActive(i)}
-                className={`flex h-9 items-center gap-2.5 rounded-sm pr-4 pl-2.5 whitespace-nowrap ${
+                onMouseEnter={markEntrySide}
+                // The highlighted option gets the same straw sweep as the buttons (Siyan, 2026-11-17), from
+                // the side the pointer came in; with the arrow keys it sweeps from the left.
+                className={`group relative flex h-9 items-center gap-2.5 overflow-hidden rounded-sm pr-4 pl-2.5 whitespace-nowrap ${
                   option.disabled
                     ? 'cursor-default text-umber/45'
                     : selected
                       ? 'cursor-pointer bg-bottle font-bold text-white'
-                      : highlighted
-                        ? 'cursor-pointer bg-bottle-tint text-ink'
-                        : 'cursor-pointer text-ink'
+                      : `cursor-pointer ${option.muted ? 'text-umber/60' : 'text-ink'}`
                 } ${selected && highlighted ? 'ring-2 ring-bottle/30 ring-inset' : ''}`}
               >
-                <svg aria-hidden="true" viewBox="0 0 12 10" className={`h-2.5 w-3 shrink-0 ${selected ? '' : 'invisible'}`}>
+                <HoverSweep off={selected || option.disabled} on={highlighted} />
+                <svg aria-hidden="true" viewBox="0 0 12 10" className={`relative h-2.5 w-3 shrink-0 ${selected ? '' : 'invisible'}`}>
                   <path d="M1 5.5 4.5 9 11 1" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                {option.label}
+                <span className="relative">{option.label}</span>
               </li>
             )
           })}

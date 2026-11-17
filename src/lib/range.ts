@@ -48,11 +48,17 @@ export function rangeLength({ from, to }: YearRange): number {
   return to - from + 1
 }
 
-/** Axis labels: finer steps for short ranges, coarser for long ones. */
-export function tickYears({ from, to }: YearRange): number[] {
+/** Years between labelled ticks: finer for short ranges, coarser for long ones. */
+function tickStep({ from, to }: YearRange): number {
   const length = to + 1 - from
   // 400 (not 320) so that an era plus its two 50-year margins (1450–1799 = 350 years) still gets 25-year steps.
-  const step = length <= 60 ? 5 : length <= 150 ? 10 : length <= 400 ? 25 : length <= 800 ? 100 : 250
+  return length <= 60 ? 5 : length <= 150 ? 10 : length <= 400 ? 25 : length <= 800 ? 100 : 250
+}
+
+/** Axis labels: finer steps for short ranges, coarser for long ones. */
+export function tickYears(range: YearRange): number[] {
+  const { from, to } = range
+  const step = tickStep(range)
   const ticks: number[] = []
   for (let year = Math.ceil(from / step) * step; year <= to + 1; year += step) ticks.push(year)
   return ticks
@@ -142,4 +148,28 @@ export function rangeBand(range: YearRange): { left: number; width: number } {
   const view = displayRange(range)
   const span = view.to + 1 - view.from
   return { left: ((range.from - view.from) / span) * 100, width: ((range.to + 1 - range.from) / span) * 100 }
+}
+
+export interface RulerMark {
+  year: number
+  /** major = a labelled year; mid = halfway between labels (when that is a round year); minor = the rest. */
+  size: 'major' | 'mid' | 'minor'
+}
+
+/**
+ * Small marks along the axis, like the centimetre and millimetre lines of a ruler (inspiration board
+ * 审美积累/, the "一季标本" poster; Siyan, 2026-11-17). They make it easier to read a year off the axis
+ * between the labels. The steps follow the labels: labels every 25 years → a mark every 5; every 10
+ * → every year, with a longer one at 5; every 100 → every 10, longer at 50.
+ */
+export function rulerMarks(range: YearRange): RulerMark[] {
+  const step = tickStep(range)
+  const minor = ({ 5: 1, 10: 1, 25: 5, 100: 10, 250: 50 } as Record<number, number>)[step]
+  const mid = ({ 10: 5, 100: 50 } as Record<number, number | undefined>)[step]
+  const marks: RulerMark[] = []
+  for (let year = Math.ceil(range.from / minor) * minor; year <= range.to + 1; year += minor) {
+    const size = year % step === 0 ? 'major' : mid && year % mid === 0 ? 'mid' : 'minor'
+    marks.push({ year, size })
+  }
+  return marks
 }

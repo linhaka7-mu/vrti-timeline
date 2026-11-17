@@ -8,6 +8,7 @@ import {
   rangeFromSearch,
   rangeLength,
   rangeToSearch,
+  rulerMarks,
   tickYears,
 } from './range'
 
@@ -106,5 +107,26 @@ describe('rangeBand', () => {
     const band = rangeBand({ from: 1500, to: 1749 })
     expect(band.left).toBeCloseTo((50 / 350) * 100)
     expect(band.width).toBeCloseTo((250 / 350) * 100)
+  })
+})
+
+describe('rulerMarks', () => {
+  it('marks every 5 years between 25-year labels', () => {
+    const marks = rulerMarks({ from: 1450, to: 1799 })
+    expect(marks.slice(0, 6)).toEqual([
+      { year: 1450, size: 'major' },
+      { year: 1455, size: 'minor' },
+      { year: 1460, size: 'minor' },
+      { year: 1465, size: 'minor' },
+      { year: 1470, size: 'minor' },
+      { year: 1475, size: 'major' },
+    ])
+    expect(marks.at(-1)).toEqual({ year: 1800, size: 'major' })
+  })
+  it('adds a longer mark halfway between 10-year labels', () => {
+    const marks = rulerMarks({ from: 1600, to: 1700 })
+    expect(marks.find((m) => m.year === 1605)?.size).toBe('mid')
+    expect(marks.find((m) => m.year === 1603)?.size).toBe('minor')
+    expect(marks.find((m) => m.year === 1610)?.size).toBe('major')
   })
 })

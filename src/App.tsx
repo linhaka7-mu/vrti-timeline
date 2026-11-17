@@ -19,6 +19,7 @@ import {
   type ListView,
 } from './lib/listView'
 import { rangeFromSearch } from './lib/range'
+import { SOURCES } from './lib/sources'
 
 /** Page shell: the framed "archive card" from the style tile, with the controls and the timeline inside. */
 function App() {
@@ -102,6 +103,21 @@ function App() {
             <Legend markGender={view.markGender} />
             {/* First load: placeholder rows instead of an empty page. */}
             {!data && !error && <TimelineSkeleton range={settledRange} />}
+            {/* Nobody to draw: say why, instead of leaving an empty space. */}
+            {data && shown && shown.length === 0 && (
+              <p className="row-in m-0 rounded border border-dashed border-umber/40 px-5 py-6 text-center text-[15px] text-umber">
+                {view.source !== 'all' && sourceCounts[view.source] === 0 && !view.query.trim() ? (
+                  <>
+                    No one from the <strong className="text-ink">{SOURCES.find((s) => s.id === view.source)!.name}</strong>{' '}
+                    {view.gender === 'all' ? '' : view.gender === 'female' ? '(women) ' : '(men) '}
+                    has both a birth and a death date in {data.range.from}–{data.range.to}, so no one can be drawn
+                    here yet. Many people in this source are known only from archival records.
+                  </>
+                ) : (
+                  <>No one matches these choices in {data.range.from}–{data.range.to}.</>
+                )}
+              </p>
+            )}
             {data && shown && shown.length > 0 && (
               // A new order or filter starts the list from the top again (the key makes a fresh timeline).
               <Timeline

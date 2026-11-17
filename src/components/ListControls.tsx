@@ -41,9 +41,9 @@ const fieldBox = 'h-9 rounded border border-umber/45 bg-white px-2 text-base tex
 export function ListControls({ view, onChange, counts, sourceCounts }: ListControlsProps) {
   const set = (change: Partial<ListView>) => onChange({ ...view, ...change })
   const n = (value: number) => value.toLocaleString('en-IE')
-  // A source with nobody here is still listed, greyed out with "(0)", so readers can see it exists
-  // (Siyan, 2026-11-17). The 1641 Depositions are the main case: their people have only event dates,
-  // which the timeline does not draw yet. The one chosen stays choosable even at 0, so it can be read.
+  // A source with nobody here is still listed with "(0)", in a paler colour, and can be chosen: the timeline
+  // then says why it is empty (Siyan, 2026-11-17: greyed-out options that could not be clicked felt odd).
+  // The 1641 Depositions are the main case: their people have only event dates, not drawn yet.
   const sourceOptions: SelectOption<SourceFilter>[] = [
     { value: 'all', label: `All sources (${n(sourceCounts.all)})`, short: 'All sources' },
     ...SOURCES.map((source) => {
@@ -52,7 +52,7 @@ export function ListControls({ view, onChange, counts, sourceCounts }: ListContr
         value: source.id,
         label: `${source.name} (${n(count)})`,
         short: source.short,
-        disabled: count === 0 && view.source !== source.id,
+        muted: count === 0,
       }
     }),
   ]

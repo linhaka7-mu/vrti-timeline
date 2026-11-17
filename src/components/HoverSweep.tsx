@@ -7,12 +7,15 @@
  * Use: the parent gets `group relative overflow-hidden` and `onMouseEnter={markEntrySide}` (lib/hover.ts); put
  * <HoverSweep /> first inside it, and give the parent's other children `relative` so they sit above it.
  */
-export function HoverSweep({ off = false }: { off?: boolean }) {
+export function HoverSweep({ off = false, on }: { off?: boolean; on?: boolean }) {
   if (off) return null
+  // `on` given: the fill follows it (the drop-down's highlighted option, moved by mouse or arrow keys)
+  // instead of the pointer hovering the parent.
+  const shown = on === undefined ? 'scale-x-0 group-hover:scale-x-100' : on ? 'scale-x-100' : 'scale-x-0'
   return (
     <span
       aria-hidden="true"
-      className="absolute inset-0 origin-left scale-x-0 bg-straw/45 transition-transform duration-200 ease-out group-hover:scale-x-100 group-data-[from=right]:origin-right motion-reduce:transition-none"
+      className={`absolute inset-0 origin-left bg-straw/45 transition-transform duration-200 ease-out group-data-[from=right]:origin-right motion-reduce:transition-none ${shown}`}
     />
   )
 }

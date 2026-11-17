@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent, type RefObject } from 're
 import { ageAtDeath } from '../lib/dates'
 import { lifeBarSegments, lifeYears, mayBeAliveIn, toPercent, yearAt, type Segment } from '../lib/geometry'
 import type { Gender, Person } from '../lib/people'
-import { displayRange, ERAS, eraBands, rangeBand, tickYears, type EraBand, type YearRange } from '../lib/range'
+import { displayRange, ERAS, eraBands, rangeBand, rulerMarks, tickYears, type EraBand, type YearRange } from '../lib/range'
 import { GenderBadge } from './GenderBadge'
 import { CARD_WIDTH, PersonCard } from './PersonCard'
 
@@ -218,7 +218,7 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
         {yearLine && (
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute top-[55px] bottom-0 z-10 border-l-[1.5px] border-bottle"
+            className="pointer-events-none absolute top-[54px] bottom-0 z-10 border-l-[1.5px] border-bottle"
             style={{ left: yearLine.x }}
           >
             {/* Level with the axis years and the same size as them (Siyan, 2026-11-17), so it reads as
@@ -273,7 +273,7 @@ function Axis({
   return (
     <div className={`relative flex overflow-hidden border-b border-copper text-[13px] text-umber [scrollbar-gutter:stable] ${END_GAP}`}>
       <div className={`${LABEL_WIDTH} shrink-0`} />
-      <div ref={plotRef} className="relative h-20 flex-1">
+      <div ref={plotRef} className="relative h-[84px] flex-1">
         {/* On the axis the eras are only named and divided by their dashed lines, without the straw
             shading: shaded here, part of an era band inside the brace looked like a highlight of the
             chosen range (Siyan, 2026-11-17). The rows below keep the shading. */}
@@ -288,10 +288,22 @@ function Axis({
         ))}
         {/* Years sit on a 60% white box, so a line passing behind (an era boundary) does not cut
             through the number. Half see-through, so it works on parchment and on the straw bands alike. */}
+        {/* Ruler marks standing on the axis line, under the labels: long at each labelled year, shorter
+            in between. Paler in the 50-year margins, like the years there. */}
+        {rulerMarks(range).map(({ year, size }) => (
+          <span
+            key={`mark-${year}`}
+            aria-hidden="true"
+            className={`glide absolute bottom-0 w-px ${size === 'major' ? 'h-[7px]' : size === 'mid' ? 'h-[5px]' : 'h-[3px]'} ${
+              year < selected.from || year > selected.to + 1 ? 'bg-umber/25' : 'bg-umber/55'
+            }`}
+            style={{ left: `${toPercent(year, range)}%` }}
+          />
+        ))}
         {ticks.map((year) => (
           <span
             key={year}
-            className={`glide absolute bottom-1 -translate-x-1/2 rounded-[3px] bg-white/60 px-1 font-type leading-tight ${
+            className={`glide absolute bottom-[9px] -translate-x-1/2 rounded-[3px] bg-white/60 px-1 font-type leading-tight ${
               year < selected.from || year > selected.to + 1 ? 'text-umber/45' : ''
             }`}
             style={{ left: `${toPercent(year, range)}%` }}
