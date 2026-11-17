@@ -5,12 +5,13 @@ import type { Gender } from '../lib/people'
  * It says in letters what the bar colour says in colour, so gender can be read without telling
  * pink from blue (red-blind viewers) and is announced by screen readers.
  * Women filled in bottle green, men outlined: the rarer group (4.5% in 1500–1749) is the easier to spot.
+ * Square with the same 4px corners as the buttons and boxes, so it belongs to the same family (Siyan, 2026-11-17).
  */
 export function GenderBadge({ gender }: { gender: Gender }) {
   const woman = gender === 'female'
   return (
     <span
-      className={`box-border inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[11px] leading-none font-bold no-underline ${
+      className={`box-border inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded text-[11px] leading-none font-bold no-underline ${
         woman ? 'bg-bottle text-white' : 'border-[1.2px] border-umber text-umber'
       }`}
     >
