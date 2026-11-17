@@ -230,7 +230,13 @@
       left 0.3s ease-out,
       width 0.3s ease-out,
       height 0.15s,
-      opacity 0.15s;
+      opacity 0.15s,
+      background-color 0.2s,
+      border-color 0.2s;
+  }
+  /* A gender badge that appears because "Mark gender" was switched on fades in (not one that scrolls in). */
+  .badge-in {
+    animation: row-in 0.25s ease-out;
   }
   .row-in {
     animation: row-in 0.3s ease-out;

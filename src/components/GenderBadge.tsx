@@ -8,11 +8,11 @@ import type { Gender } from '../lib/people'
  * Square, like the buttons and boxes. 15px, a little under the height of the name's capitals plus
  * descenders: at 18px it looked a size bigger than the name beside it (Siyan, 2026-11-17).
  */
-export function GenderBadge({ gender }: { gender: Gender }) {
+export function GenderBadge({ gender, fadeIn = false }: { gender: Gender; fadeIn?: boolean }) {
   const woman = gender === 'female'
   return (
     <span
-      className={`box-border inline-flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-[3px] text-[10px] leading-none font-bold no-underline ${
+      className={`${fadeIn ? 'badge-in' : ''} box-border inline-flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-[3px] text-[10px] leading-none font-bold no-underline ${
         woman ? 'bg-bottle text-white' : 'border-[1.2px] border-umber text-umber'
       }`}
     >

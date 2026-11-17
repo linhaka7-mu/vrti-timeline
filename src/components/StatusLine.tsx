@@ -94,8 +94,7 @@ export function StatusLine({
       </div>
       {/* No separate "Filtered to … Show everyone" line: the filters are visible in the controls just
           above, with their counts (Siyan, 2026-11-17). */}
-      {/* "Not shown yet" is now the last item of the legend line below (Siyan, 2026-11-17). Unreadable
-          records are rare, so their line only appears when there are some. */}
+      {/* Unreadable records are rare, so their line only appears when there are some. */}
       {unreadable > 0 && (
         <p className="m-0 text-[14px] text-umber">
           {unreadable} records were skipped because a stored date could not be read.

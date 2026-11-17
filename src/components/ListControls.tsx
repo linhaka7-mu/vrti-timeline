@@ -76,10 +76,13 @@ export function ListControls({ view, onChange, counts, sourceCounts }: ListContr
               <label
                 key={value}
                 onMouseEnter={markEntrySide}
-                className={`group relative flex h-9 cursor-pointer items-center gap-1.5 overflow-hidden border-r select-none border-umber/45 px-3 transition-colors duration-150 last:border-r-0 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-record motion-reduce:transition-none ${
+                className={`group relative flex h-9 cursor-pointer items-center gap-1.5 overflow-hidden border-r select-none border-umber/45 px-3 last:border-r-0 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-record ${
                   selected ? 'bg-bottle text-white' : 'bg-white text-ink'
                 }`}
               >
+                {/* Selecting switches the colour at once, with no fade: the hover fill disappears the moment the
+                    button is chosen, and a fade from white to green showed a white flash in between, several
+                    times when clicking back and forth (Siyan, 2026-11-17). */}
                 <HoverSweep off={selected} />
                 <input
                   type="radio"
@@ -109,7 +112,7 @@ export function ListControls({ view, onChange, counts, sourceCounts }: ListContr
           row lines up (Siyan, 2026-11-17; it was a switch). Still a checkbox underneath, so it is read out as on / off. */}
       <label
         onMouseEnter={markEntrySide}
-        className={`group relative flex h-9 cursor-pointer items-center overflow-hidden rounded border px-3 font-bold transition-colors duration-150 select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-record motion-reduce:transition-none ${
+        className={`group relative flex h-9 cursor-pointer items-center overflow-hidden rounded border px-3 font-bold select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-record ${
           view.markGender ? 'border-bottle bg-bottle text-white' : 'border-umber/45 bg-white text-ink'
         }`}
       >

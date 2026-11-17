@@ -101,6 +101,19 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
     setShownRange(range)
     setFadeNewRows(true)
   }
+  // The same for "Mark gender": badges that appear because it was switched on fade in; later, badges on
+  // rows scrolled into view do not.
+  const [shownMarks, setShownMarks] = useState(markGender)
+  const [fadeBadges, setFadeBadges] = useState(false)
+  if (markGender !== shownMarks) {
+    setShownMarks(markGender)
+    setFadeBadges(markGender)
+  }
+  useEffect(() => {
+    if (!fadeBadges) return
+    const timer = window.setTimeout(() => setFadeBadges(false), 600)
+    return () => window.clearTimeout(timer)
+  }, [fadeBadges])
   // 0.6s after a change, rows that appear are just scrolled into view: no fade for them.
   useEffect(() => {
     if (!fadeNewRows) return
@@ -193,6 +206,7 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
                 }
                 highlighted={shownCard?.person === person}
                 fadeIn={fadeNewRows}
+                fadeBadge={fadeBadges}
                 onLaneEnter={showCard}
                 onLaneLeave={hideSoon}
                 onLaneClick={pinCard}
@@ -344,6 +358,8 @@ interface PersonRowProps {
   highlighted: boolean
   /** The row arrived with a new range: it fades in. */
   fadeIn: boolean
+  /** "Mark gender" was just switched on: the badge fades in. */
+  fadeBadge: boolean
   onLaneEnter: (person: Person, event: MouseEvent<HTMLElement>) => void
   onLaneLeave: () => void
   onLaneClick: (person: Person, event: MouseEvent<HTMLElement>) => void
@@ -360,6 +376,7 @@ function PersonRow({
   faded,
   highlighted,
   fadeIn,
+  fadeBadge,
   onLaneEnter,
   onLaneLeave,
   onLaneClick,
@@ -387,7 +404,7 @@ function PersonRow({
     >
       <div className={`${LABEL_WIDTH} flex shrink-0 flex-col justify-center overflow-hidden pr-3 pl-1`}>
         <div className="flex min-w-0 items-center gap-1.5">
-          {gender && <GenderBadge gender={gender} />}
+          {gender && <GenderBadge gender={gender} fadeIn={fadeBadge} />}
           <a
             href={person.uri}
             target="_blank"
