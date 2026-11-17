@@ -132,7 +132,14 @@ describe('address', () => {
     expect(viewToSearch({ from: 1500, to: 1749 }, DEFAULT_VIEW)).toBe('?from=1500&to=1749')
   })
   it('round-trips every setting, including accented searches', () => {
-    const view: ListView = { sort: 'surname', direction: 'desc', gender: 'female', query: 'Ní Bhriain', markGender: false }
+    const view: ListView = {
+      sort: 'surname',
+      direction: 'desc',
+      gender: 'female',
+      source: 'staple',
+      query: 'Ní Bhriain',
+      markGender: false,
+    }
     const search = viewToSearch({ from: 1500, to: 1749 }, view)
     expect(listViewFromSearch(search)).toEqual(view)
   })
