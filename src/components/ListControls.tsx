@@ -10,6 +10,8 @@ import {
   type SortKey,
 } from '../lib/listView'
 import { SOURCES } from '../lib/sources'
+import { markEntrySide } from '../lib/hover'
+import { HoverSweep } from './HoverSweep'
 import { Select, type SelectOption } from './Select'
 
 interface ListControlsProps {
@@ -73,10 +75,12 @@ export function ListControls({ view, onChange, counts, sourceCounts }: ListContr
             return (
               <label
                 key={value}
-                className={`flex h-9 cursor-pointer items-center gap-1.5 border-r select-none border-umber/45 px-3 last:border-r-0 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-record ${
-                  selected ? 'bg-bottle text-white' : 'bg-white text-ink hover:bg-bottle-tint'
+                onMouseEnter={markEntrySide}
+                className={`group relative flex h-9 cursor-pointer items-center gap-1.5 overflow-hidden border-r select-none border-umber/45 px-3 transition-colors duration-150 last:border-r-0 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-record motion-reduce:transition-none ${
+                  selected ? 'bg-bottle text-white' : 'bg-white text-ink'
                 }`}
               >
+                <HoverSweep off={selected} />
                 <input
                   type="radio"
                   name="gender"
@@ -85,10 +89,10 @@ export function ListControls({ view, onChange, counts, sourceCounts }: ListContr
                   onChange={() => set({ gender: value })}
                   className="sr-only"
                 />
-                <span className="font-bold">{label}</span>
+                <span className="relative font-bold">{label}</span>
                 {/* The count always takes the room of "00,000" (the whole graph has fewer than 17,000 people),
                     so the buttons keep one width whatever the range and the search. Figures are equal-width. */}
-                <span className={`grid text-sm ${selected ? 'text-paper/80' : 'text-umber'}`}>
+                <span className={`relative grid text-sm ${selected ? 'text-paper/80' : 'text-umber'}`}>
                   <span aria-hidden="true" className="invisible col-start-1 row-start-1">
                     00,000
                   </span>
@@ -104,17 +108,19 @@ export function ListControls({ view, onChange, counts, sourceCounts }: ListContr
           Drawn as a button like the gender buttons next to it, bottle green when on and white when off, so the
           row lines up (Siyan, 2026-11-17; it was a switch). Still a checkbox underneath, so it is read out as on / off. */}
       <label
-        className={`flex h-9 cursor-pointer items-center rounded border px-3 font-bold select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-record ${
-          view.markGender ? 'border-bottle bg-bottle text-white' : 'border-umber/45 bg-white text-ink hover:bg-bottle-tint'
+        onMouseEnter={markEntrySide}
+        className={`group relative flex h-9 cursor-pointer items-center overflow-hidden rounded border px-3 font-bold transition-colors duration-150 select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-record motion-reduce:transition-none ${
+          view.markGender ? 'border-bottle bg-bottle text-white' : 'border-umber/45 bg-white text-ink'
         }`}
       >
+        <HoverSweep off={view.markGender} />
         <input
           type="checkbox"
           checked={view.markGender}
           onChange={(event) => set({ markGender: event.target.checked })}
           className="sr-only"
         />
-        Mark gender
+        <span className="relative">Mark gender</span>
       </label>
     </section>
   )

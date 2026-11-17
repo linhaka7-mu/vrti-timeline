@@ -216,6 +216,20 @@
   .card-in {
     animation: card-in 0.14s ease-out;
   }
+  /* An open drop-down menu slides 4px down into place while it fades in (Siyan, 2026-11-17). */
+  .menu-in {
+    animation: menu-in 0.15s ease-out;
+  }
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 @keyframes card-in {
   from {

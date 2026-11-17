@@ -57,7 +57,10 @@ export function DensityChart({ range }: { range: YearRange }) {
                 width={Math.max(0, x(end) - x(decade.start) - 1.2)}
                 height={height}
                 fill="url(#density-lines)"
-                opacity={inRange ? 0.95 : 0.35}
+                // As a style, not an attribute, so the change can fade: the chosen decades light up in 0.2s
+                // as the slider moves or an era is clicked (Siyan, 2026-11-17).
+                className="transition-opacity duration-200 ease-out motion-reduce:transition-none"
+                style={{ opacity: inRange ? 0.95 : 0.35 }}
               />
               {/* The whole column answers on hover, not just the lines. */}
               <rect

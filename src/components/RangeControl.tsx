@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { DOMAIN_END, DOMAIN_START, ERAS, parseYearText, type YearRange } from '../lib/range'
 import { DensityChart } from './DensityChart'
+import { markEntrySide } from '../lib/hover'
+import { HoverSweep } from './HoverSweep'
 
 interface RangeControlProps {
   range: YearRange
@@ -100,21 +102,26 @@ export function RangeControl({ range, onChange }: RangeControlProps) {
               aria-label={fullName}
               title={fullName}
               onClick={() => onChange({ from: era.from, to: era.to })}
-              className={`@container absolute top-0 flex h-10 cursor-pointer items-center overflow-hidden bg-transparent pl-2 text-left whitespace-nowrap select-none ${
+              onMouseEnter={markEntrySide}
+              className={`group @container absolute top-0 flex h-10 cursor-pointer items-center overflow-hidden bg-transparent pl-2 text-left whitespace-nowrap select-none ${
                 era.from > DOMAIN_START ? 'border-l border-straw-edge' : ''
               } ${selected ? 'text-bottle' : 'text-umber hover:text-bottle'}`}
               style={{ left: `${along(era.from)}%`, width: `${along(era.to + 1) - along(era.from)}%` }}
             >
-              <span aria-hidden="true" className={`hidden flex-col leading-tight ${fit.full}`}>
+              {/* Hover: a straw fill sweeps across the whole label from the side the pointer entered, so the
+                  eras read as things to click (sketch page 设计备份/时代标签可点提示 2026-11-17.html, option 2,
+                  in straw rather than green-grey, with the sweep Siyan asked for). Still for reduced motion. */}
+              <HoverSweep />
+              <span aria-hidden="true" className={`relative hidden flex-col leading-tight ${fit.full}`}>
                 <span className={`text-[13px] ${weight}`}>{era.name}</span>
                 <span className={`text-[11.5px] ${selected ? 'text-bottle/75' : 'text-umber/75'}`}>{era.label}</span>
               </span>
               {fit.short && (
-                <span aria-hidden="true" className={`hidden text-[13px] ${weight} ${fit.short}`}>
+                <span aria-hidden="true" className={`relative hidden text-[13px] ${weight} ${fit.short}`}>
                   {era.short}
                 </span>
               )}
-              <span aria-hidden="true" className={`text-xs ${weight} ${fit.tiny}`}>
+              <span aria-hidden="true" className={`relative text-xs ${weight} ${fit.tiny}`}>
                 {era.tiny}
               </span>
             </button>
