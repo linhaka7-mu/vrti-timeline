@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Legend } from './components/Legend'
 import { ListControls, SortControls } from './components/ListControls'
 import { CornerFringe, StarDivider } from './components/Ornaments'
-import { RangeControl } from './components/RangeControl'
+import { RangeControl, YearBoxes } from './components/RangeControl'
 import { StatusLine } from './components/StatusLine'
 import { Timeline, TimelineSkeleton } from './components/Timeline'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
@@ -92,6 +92,7 @@ function App() {
               count={everyone?.length}
               shown={shown?.length}
               filtered={filtered}
+              yearControls={<YearBoxes range={range} onChange={setRange} />}
               sortControls={<SortControls view={view} onChange={setView} />}
               unreadable={data?.unreadable ?? 0}
               loading={loading}

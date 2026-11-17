@@ -28,7 +28,7 @@ const GENDER_OPTIONS: { value: GenderFilter; label: string }[] = [
 ]
 
 const fieldLabel = 'flex items-center gap-2 text-umber'
-const fieldBox = 'h-10 rounded border-[1.5px] border-umber bg-white px-2 text-base text-ink focus:border-bottle'
+const fieldBox = 'h-9 rounded border-[1.5px] border-umber bg-white px-2 text-base text-ink focus:border-bottle'
 
 /**
  * The row between the range controls and the timeline: name search, data source, gender filter and
@@ -79,7 +79,7 @@ export function ListControls({ view, onChange, counts, sourceCounts }: ListContr
             return (
               <label
                 key={value}
-                className={`flex h-10 cursor-pointer items-center gap-1.5 border-r border-straw-edge px-3 last:border-r-0 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-record ${
+                className={`flex h-9 cursor-pointer items-center gap-1.5 border-r border-straw-edge px-3 last:border-r-0 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-record ${
                   selected ? 'bg-bottle text-paper' : 'bg-straw/60 text-ink hover:bg-straw'
                 }`}
               >

@@ -9,7 +9,9 @@ interface StatusLineProps {
   shown: number | undefined
   /** Whether any filter (gender, source, name search) is on: then the count reads "Showing 104 of 2,330". */
   filtered: boolean
-  /** The two sort boxes, placed at the end of the sentence: "…alive in 1500–1749, sorted by [▾] [▾]". */
+  /** The two year boxes, in the middle of the sentence: "…alive in [1500] – [1749], sorted by…". */
+  yearControls: ReactNode
+  /** The two sort boxes, placed at the end of the sentence: "…sorted by [▾] [▾]". */
   sortControls: ReactNode
   unreadable: number
   loading: boolean
@@ -26,6 +28,7 @@ export function StatusLine({
   count,
   shown,
   filtered,
+  yearControls,
   sortControls,
   unreadable,
   loading,
@@ -55,22 +58,30 @@ export function StatusLine({
       <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
         <span aria-live="polite">
           {count === undefined ? (
-            <span className="text-umber">Loading people…</span>
+            <strong className="text-umber">Loading people</strong>
           ) : (
-            <>
-              <strong>
-                {filtered && shown !== undefined
-                  ? `Showing ${shown.toLocaleString('en-IE')} of ${count.toLocaleString('en-IE')} people`
-                  : `Showing ${count.toLocaleString('en-IE')} people`}
-              </strong>
-              <span className="text-umber">
-                {' '}
-                with birth and death dates, alive in {range.from}–{range.to},
-              </span>
-            </>
-          )}{' '}
-          <span className="text-umber">sorted by</span>
+            <strong>
+              {filtered && shown !== undefined
+                ? `Showing ${shown.toLocaleString('en-IE')} of ${count.toLocaleString('en-IE')} people`
+                : `Showing ${count.toLocaleString('en-IE')} people`}
+            </strong>
+          )}
+          {/* The years are said for screen readers here; on screen they are the boxes that follow. */}
+          <span className="sr-only">
+            {' '}
+            alive in {range.from}–{range.to}
+          </span>
+          <span aria-hidden="true" className="text-umber">
+            {' '}
+            with birth and death dates, alive in
+          </span>
         </span>
+        {/* The comma sits right after the second box, with a small 4px gap (the row's wider gap looked like a space before it). */}
+        <span className="flex items-center">
+          {yearControls}
+          <span className="ml-1 text-umber">,</span>
+        </span>
+        <span className="text-umber">sorted by</span>
         {sortControls}
         {loading && count !== undefined && <span className="text-umber">Updating…</span>}
       </div>

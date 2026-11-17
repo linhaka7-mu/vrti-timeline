@@ -143,7 +143,7 @@ export function Select<T extends string>({ value, options, onChange, labelledBy,
         onBlur={(event) => {
           if (!rootRef.current?.contains(event.relatedTarget as Node)) setOpen(false)
         }}
-        className={`flex h-10 cursor-pointer items-center gap-4 rounded border-[1.5px] bg-white pr-3.5 pl-3.5 text-base text-ink ${
+        className={`flex h-9 cursor-pointer items-center gap-4 rounded border-[1.5px] bg-white pr-3.5 pl-3.5 text-base text-ink ${
           open ? 'border-bottle' : 'border-umber hover:border-bottle'
         }`}
       >
@@ -197,7 +197,7 @@ export function Select<T extends string>({ value, options, onChange, labelledBy,
                 onPointerDown={(event) => event.preventDefault()}
                 onClick={() => choose(i)}
                 onPointerMove={() => !option.disabled && setActive(i)}
-                className={`flex items-center gap-2.5 rounded-sm py-2 pr-4 pl-2.5 whitespace-nowrap ${
+                className={`flex h-9 items-center gap-2.5 rounded-sm pr-4 pl-2.5 whitespace-nowrap ${
                   option.disabled
                     ? 'cursor-default text-umber/45'
                     : selected

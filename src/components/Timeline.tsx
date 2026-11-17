@@ -125,9 +125,6 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
     if (fraction < 0 || fraction >= 1) return setYearLine(null)
     setYearLine({ year: yearAt(fraction, view), x: event.clientX - wrap.left })
   }
-  const aliveCount = yearLine
-    ? people.filter((p) => mayBeAliveIn(p.birth, p.death, yearLine.year)).length
-    : 0
 
   // A pinned card closes with Esc or a click anywhere outside it and outside the bars.
   const pinned = shownCard?.pinned ?? false
@@ -149,19 +146,6 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
 
   return (
     <div className="flex flex-col">
-      {/* What the year line shows, in words. Hidden from screen readers: it changes with every
-          mouse movement, and the same information is not otherwise needed to use the page. */}
-      <p aria-hidden="true" className="m-0 mb-1.5 min-h-5 text-[14px] text-umber">
-        {yearLine ? (
-          <>
-            <strong className="text-ink">{yearLine.year}</strong>: {aliveCount.toLocaleString('en-IE')} of{' '}
-            {people.length.toLocaleString('en-IE')} people may have been alive (the others are faded)
-          </>
-        ) : (
-          '\u00a0'
-        )}
-      </p>
-
       <div ref={wrapRef} className="relative" onMouseMove={moveYearLine} onMouseLeave={() => setYearLine(null)}>
         <Axis range={view} selected={range} ticks={ticks} bands={bands} updating={updating} plotRef={plotRef} />
 
@@ -209,6 +193,8 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
                 one more year on the axis and stays clear of the "Your range" brace above. The line
                 starts at the label. */}
             <span className="absolute top-0 -translate-x-1/2 rounded-[4px] bg-bottle px-1.5 font-type text-[13px] leading-tight whitespace-nowrap text-white">
+              {/* Only the year. The count of people possibly alive that year was dropped (Siyan,
+                  2026-11-17): it only counts the people on record, so it said little. */}
               {yearLine.year}
             </span>
           </div>
@@ -500,7 +486,9 @@ function RangeRuler({ selected }: { selected: YearRange }) {
         className="absolute top-0 z-[1] -translate-x-1/2 rounded-[6px] bg-bottle px-2 font-type text-[12px] leading-snug whitespace-nowrap text-white"
         style={{ left: `${band.left + band.width / 2}%` }}
       >
-        Your range · {selected.from} – {selected.to}
+        {/* No years here: the brace's ends and the axis already show them, and the year boxes and the
+            status sentence say them in words (Siyan, 2026-11-17). */}
+        Your range
       </span>
       <HorizontalBrace left={band.left} width={band.width} />
     </>

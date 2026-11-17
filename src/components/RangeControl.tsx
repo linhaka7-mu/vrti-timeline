@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DOMAIN_END, DOMAIN_START, ERAS, parseYearText, rangeLength, type YearRange } from '../lib/range'
+import { DOMAIN_END, DOMAIN_START, ERAS, parseYearText, type YearRange } from '../lib/range'
 import { DensityChart } from './DensityChart'
 
 interface RangeControlProps {
@@ -47,7 +47,9 @@ function along(year: number): number {
 /**
  * Choosing a time range (handbook §4.7): three handles on ONE range, not three separate searches.
  * Dragging the slider changes the year boxes; typing a year moves the slider; clicking an era moves both.
- * That is why they sit together as one control. Order: density chart, era buttons, then the slider and the year boxes they move.
+ * Order: density chart, era buttons, then the slider. The year boxes are in the status sentence below
+ * ("…alive in [1500] – [1749], sorted by…", see YearBoxes): there they also replace the years the
+ * sentence used to repeat, and the row they had to themselves is gone (Siyan, 2026-11-17).
  */
 export function RangeControl({ range, onChange }: RangeControlProps) {
   const setFrom = (from: number) => onChange({ from: Math.min(from, range.to), to: range.to })
@@ -136,18 +138,28 @@ export function RangeControl({ range, onChange }: RangeControlProps) {
         <span>{DOMAIN_START}</span>
         <span>{DOMAIN_END}</span>
       </div>
-
-      {/* 3 · Exact years. Needed, not just a convenience: on a ~1,100px slider one pixel is more than a year. */}
-      <div className="mt-1 flex flex-wrap items-center gap-3 text-base">
-        <YearInput key={`from-${range.from}`} label="From" value={range.from} onCommit={setFrom} />
-        <YearInput key={`to-${range.to}`} label="to" value={range.to} onCommit={setTo} />
-        <span className="font-type text-sm text-umber">{rangeLength(range).toLocaleString('en-IE')} years</span>
-      </div>
     </section>
   )
 }
 
+/**
+ * The two year boxes, "[1500] – [1749]", placed in the status sentence. Exact years are needed, not just
+ * a convenience: on a ~1,100px slider one pixel is more than a year.
+ */
+export function YearBoxes({ range, onChange }: RangeControlProps) {
+  const setFrom = (from: number) => onChange({ from: Math.min(from, range.to), to: range.to })
+  const setTo = (to: number) => onChange({ from: range.from, to: Math.max(to, range.from) })
+  return (
+    <span className="flex items-center gap-2">
+      <YearInput key={`from-${range.from}`} label="From year" value={range.from} onCommit={setFrom} />
+      <span className="text-umber">–</span>
+      <YearInput key={`to-${range.to}`} label="To year" value={range.to} onCommit={setTo} />
+    </span>
+  )
+}
+
 interface YearInputProps {
+  /** Read out by screen readers; the sentence around the boxes says the rest. */
   label: string
   value: number
   onCommit: (year: number) => void
@@ -170,9 +182,8 @@ function YearInput({ label, value, onCommit }: YearInputProps) {
     if (year !== value) onCommit(year)
   }
   return (
-    <label className="flex items-center gap-3 text-umber">
-      {label}
-      <input
+    <input
+        aria-label={label}
         inputMode="numeric"
         value={text}
         onChange={(event) => setText(event.target.value)}
@@ -182,8 +193,7 @@ function YearInput({ label, value, onCommit }: YearInputProps) {
           // That Enter must not apply the year yet, or the letters land in the box afterwards.
           if (event.key === 'Enter' && !event.nativeEvent.isComposing) commit()
         }}
-        className="h-10 w-24 rounded border-[1.5px] border-umber bg-white px-3 font-type text-base text-ink focus:border-bottle"
+        className="h-9 w-20 rounded border-[1.5px] border-umber bg-white px-3 font-type text-base text-ink focus:border-bottle"
       />
-    </label>
   )
 }
