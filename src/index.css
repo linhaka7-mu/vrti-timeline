@@ -216,9 +216,33 @@
   .card-in {
     animation: card-in 0.14s ease-out;
   }
+  /* When the range changes, the axis years, era bands and names, grid lines and the bars of people who
+     are in both the old and the new range glide to their new places; people new to the range fade in
+     (components/Timeline.tsx; Siyan, 2026-11-17). Bars also keep their quick height / opacity changes
+     (card open, year line). Only here, so reduced motion gets none of it. */
+  .glide {
+    transition:
+      left 0.3s ease-out,
+      width 0.3s ease-out;
+  }
+  .bar-motion {
+    transition:
+      left 0.3s ease-out,
+      width 0.3s ease-out,
+      height 0.15s,
+      opacity 0.15s;
+  }
+  .row-in {
+    animation: row-in 0.3s ease-out;
+  }
   /* An open drop-down menu slides 4px down into place while it fades in (Siyan, 2026-11-17). */
   .menu-in {
     animation: menu-in 0.15s ease-out;
+  }
+}
+@keyframes row-in {
+  from {
+    opacity: 0;
   }
 }
 @keyframes menu-in {

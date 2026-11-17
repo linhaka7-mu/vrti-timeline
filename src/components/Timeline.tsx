@@ -90,6 +90,23 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
   const view = displayRange(range)
   const ticks = tickYears(view)
   const bands = eraBands(view)
+  // When the range changes, everything that stays glides to its new place (the .glide class) and the rows
+  // of people who were not there before fade in. Only rows that arrive with the new range fade, not rows
+  // that later scroll into view, so the moment of the change is remembered here (Siyan, 2026-11-17).
+  const [shownRange, setShownRange] = useState(range)
+  // True on mount too: the timeline is rebuilt (App gives it a new key) when the order, gender, source or
+  // name search changes, so the new list fades in instead of jumping (Siyan, 2026-11-17).
+  const [fadeNewRows, setFadeNewRows] = useState(true)
+  if (range.from !== shownRange.from || range.to !== shownRange.to) {
+    setShownRange(range)
+    setFadeNewRows(true)
+  }
+  // 0.6s after a change, rows that appear are just scrolled into view: no fade for them.
+  useEffect(() => {
+    if (!fadeNewRows) return
+    const timer = window.setTimeout(() => setFadeNewRows(false), 600)
+    return () => window.clearTimeout(timer)
+  }, [fadeNewRows, shownRange])
   // A card for someone who is no longer listed (new range, filter, search) is simply not shown.
   const shownCard = card && people.includes(card.person) ? card : null
 
@@ -175,6 +192,7 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
                   !mayBeAliveIn(person.birth, person.death, yearLine.year)
                 }
                 highlighted={shownCard?.person === person}
+                fadeIn={fadeNewRows}
                 onLaneEnter={showCard}
                 onLaneLeave={hideSoon}
                 onLaneClick={pinCard}
@@ -259,7 +277,7 @@ function Axis({
         {ticks.map((year) => (
           <span
             key={year}
-            className={`absolute bottom-1 -translate-x-1/2 rounded-[3px] bg-white/60 px-1 font-type leading-tight ${
+            className={`glide absolute bottom-1 -translate-x-1/2 rounded-[3px] bg-white/60 px-1 font-type leading-tight ${
               year < selected.from || year > selected.to + 1 ? 'text-umber/45' : ''
             }`}
             style={{ left: `${toPercent(year, range)}%` }}
@@ -324,6 +342,8 @@ interface PersonRowProps {
   faded: boolean
   /** This person's card is open. */
   highlighted: boolean
+  /** The row arrived with a new range: it fades in. */
+  fadeIn: boolean
   onLaneEnter: (person: Person, event: MouseEvent<HTMLElement>) => void
   onLaneLeave: () => void
   onLaneClick: (person: Person, event: MouseEvent<HTMLElement>) => void
@@ -339,6 +359,7 @@ function PersonRow({
   bands,
   faded,
   highlighted,
+  fadeIn,
   onLaneEnter,
   onLaneLeave,
   onLaneClick,
@@ -361,7 +382,7 @@ function PersonRow({
 
   return (
     <li
-      className={`absolute inset-x-0 flex ${END_GAP} ${highlighted ? 'bg-bottle-tint' : striped ? 'bg-linen/30' : ''}`}
+      className={`absolute inset-x-0 flex ${END_GAP} ${fadeIn ? 'row-in' : ''} ${highlighted ? 'bg-bottle-tint' : striped ? 'bg-linen/30' : ''}`}
       style={{ top, height: ROW_HEIGHT }}
     >
       <div className={`${LABEL_WIDTH} flex shrink-0 flex-col justify-center overflow-hidden pr-3 pl-1`}>
@@ -398,7 +419,7 @@ function PersonRow({
         {ticks.map((year) => (
           <div
             key={year}
-            className="absolute inset-y-0 w-px bg-copper/15"
+            className="glide absolute inset-y-0 w-px bg-copper/15"
             style={{ left: `${toPercent(year, range)}%` }}
           />
         ))}
@@ -412,7 +433,7 @@ function PersonRow({
           <div
             data-lane
             aria-hidden="true"
-            className="absolute top-1/2 h-6 min-w-3 -translate-y-1/2 cursor-pointer"
+            className="glide absolute top-1/2 h-6 min-w-3 -translate-y-1/2 cursor-pointer"
             style={{ left: `${hit.left}%`, width: `${hit.width}%` }}
             onMouseEnter={(event) => onLaneEnter(person, event)}
             onMouseLeave={onLaneLeave}
@@ -447,7 +468,7 @@ function EraName({ band }: { band: EraBand }) {
   return (
     <span
       title={`${era.name}, ${era.label}`}
-      className="@container absolute top-9 overflow-hidden pl-1.5 font-display text-[15px] leading-tight font-semibold whitespace-nowrap text-bottle/85"
+      className="glide @container absolute top-9 overflow-hidden pl-1.5 font-display text-[15px] leading-tight font-semibold whitespace-nowrap text-bottle/85"
       style={{ left: `${band.left}%`, width: `${band.width}%` }}
     >
       <span className={`hidden ${fit.name}`}>{era.name}</span>
@@ -466,7 +487,7 @@ function EraBands({ bands, linesOnly = false }: { bands: EraBand[]; linesOnly?: 
     <div
       key={band.name}
       aria-hidden="true"
-      className={`absolute inset-y-0 ${band.index % 2 === 1 && !linesOnly ? 'bg-straw/25' : ''} ${
+      className={`glide absolute inset-y-0 ${band.index % 2 === 1 && !linesOnly ? 'bg-straw/25' : ''} ${
         band.startsInside ? 'border-l border-dashed border-bottle/35' : ''
       }`}
       style={{ left: `${band.left}%`, width: `${band.width}%` }}
@@ -558,7 +579,7 @@ function Bar({
     segment.kind === 'certain' ? (emphasised ? 'h-3' : 'h-2.5') : emphasised ? 'h-[17px]' : 'h-3.5'
   return (
     <div
-      className={`absolute top-1/2 -translate-y-1/2 box-border transition-[height,opacity] duration-150 motion-reduce:transition-none ${height} ${look} ${faded ? 'opacity-30' : ''}`}
+      className={`bar-motion absolute top-1/2 -translate-y-1/2 box-border ${height} ${look} ${faded ? 'opacity-30' : ''}`}
       style={{ left: `${segment.left}%`, width: `${segment.width}%` }}
     />
   )
