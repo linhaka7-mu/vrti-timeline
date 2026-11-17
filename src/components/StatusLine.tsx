@@ -7,8 +7,6 @@ interface StatusLineProps {
   count: number | undefined
   /** How many are left after the gender filter and name search. */
   shown: number | undefined
-  /** Whether any filter (gender, source, name search) is on: then the count reads "Showing 104 of 2,330". */
-  filtered: boolean
   /** The two year boxes, in the middle of the sentence: "…alive in [1500] – [1749], sorted by…". */
   yearControls: ReactNode
   /** The two sort boxes, placed at the end of the sentence: "…sorted by [▾] [▾]". */
@@ -27,7 +25,6 @@ export function StatusLine({
   range,
   count,
   shown,
-  filtered,
   yearControls,
   sortControls,
   unreadable,
@@ -60,10 +57,20 @@ export function StatusLine({
           {count === undefined ? (
             <strong className="text-umber">Loading people</strong>
           ) : (
+            // Only the number shown, never "106 of 2,487": the filter buttons already carry the counts, and
+            // the sentence keeps one length whatever is chosen, so the boxes after it do not jump (Siyan, 2026-11-17).
+            // The number sits in a slot as wide as "0,000" (equal-width figures), centred, so 106 and
+            // 2,487 take the same room. A larger number (the whole graph has about 10,600) simply widens the
+            // slot: it is never cut off (Siyan, 2026-11-17).
             <strong>
-              {filtered && shown !== undefined
-                ? `Showing ${shown.toLocaleString('en-IE')} of ${count.toLocaleString('en-IE')} people`
-                : `Showing ${count.toLocaleString('en-IE')} people`}
+              Showing{' '}
+              <span className="inline-grid justify-items-center tabular-nums">
+                <span aria-hidden="true" className="invisible col-start-1 row-start-1">
+                  0,000
+                </span>
+                <span className="col-start-1 row-start-1">{(shown ?? count).toLocaleString('en-IE')}</span>
+              </span>{' '}
+              people
             </strong>
           )}
           {/* The years are said for screen readers here; on screen they are the boxes that follow. */}
@@ -86,7 +93,7 @@ export function StatusLine({
         {loading && count !== undefined && <span className="text-umber">Updating…</span>}
       </div>
       {/* No separate "Filtered to … Show everyone" line: the filters are visible in the controls just
-          above, and "Showing 104 of 2,330" already says that some are hidden (Siyan, 2026-11-17). */}
+          above, with their counts (Siyan, 2026-11-17). */}
       <p className="m-0 text-[14px] text-umber">
         Not shown yet: people known only from archival records or estimated dates.
         {unreadable > 0 && ` ${unreadable} records were skipped because a stored date could not be read.`}

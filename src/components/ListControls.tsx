@@ -27,8 +27,9 @@ const GENDER_OPTIONS: { value: GenderFilter; label: string }[] = [
   { value: 'male', label: 'Men' },
 ]
 
-const fieldLabel = 'flex items-center gap-2 text-umber'
-const fieldBox = 'h-9 rounded border-[1.5px] border-umber bg-white px-2 text-base text-ink focus:border-bottle'
+// White with a brown edge, like every control in this row; bottle green only marks what is switched on
+// (sketch page 设计备份/控件配色方案 2026-11-17.html, option 1).
+const fieldBox = 'h-9 rounded border border-umber/45 bg-white px-2 text-base text-ink focus:border-bottle'
 
 /**
  * The row between the range controls and the timeline: name search, data source, gender filter and
@@ -58,29 +59,22 @@ export function ListControls({ view, onChange, counts, sourceCounts }: ListContr
     <section aria-label="Find and order people" className="flex flex-wrap items-center gap-x-6 gap-y-3 text-base">
       <NameSearch value={view.query} onSearch={(query) => set({ query })} />
 
-      <div className="flex items-center gap-2">
-        <span id="source-label" className="text-umber">
-          Source
-        </span>
-        <Select
-          labelledBy="source-label"
-          value={view.source}
-          options={sourceOptions}
-          onChange={(source: SourceFilter) => set({ source })}
-        />
-      </div>
+      {/* No visible "Source": "All sources" and the source names say what the box is (Siyan, 2026-11-17).
+          Screen readers still hear "Source". */}
+      <Select ariaLabel="Source" value={view.source} options={sourceOptions} onChange={(source: SourceFilter) => set({ source })} />
 
       {/* A group of radio buttons drawn as joined buttons: arrow keys move between them, as in any radio group. */}
       <fieldset className="m-0 flex items-center gap-2 border-0 p-0">
-        <legend className="float-left mr-2 p-0 text-umber">Show</legend>
-        <div className="flex overflow-hidden rounded-sm border border-straw-edge">
+        {/* No visible "Show": the three buttons speak for themselves (Siyan, 2026-11-17). Screen readers still hear it. */}
+        <legend className="sr-only">Show</legend>
+        <div className="flex overflow-hidden rounded border border-umber/45">
           {GENDER_OPTIONS.map(({ value, label }) => {
             const selected = view.gender === value
             return (
               <label
                 key={value}
-                className={`flex h-9 cursor-pointer items-center gap-1.5 border-r border-straw-edge px-3 last:border-r-0 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-record ${
-                  selected ? 'bg-bottle text-paper' : 'bg-straw/60 text-ink hover:bg-straw'
+                className={`flex h-9 cursor-pointer items-center gap-1.5 border-r select-none border-umber/45 px-3 last:border-r-0 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-record ${
+                  selected ? 'bg-bottle text-white' : 'bg-white text-ink hover:bg-bottle-tint'
                 }`}
               >
                 <input
@@ -106,24 +100,20 @@ export function ListControls({ view, onChange, counts, sourceCounts }: ListContr
         </div>
       </fieldset>
 
-      {/* "Mark gender": on by default (supervisor, 2026-11-02), so women stand out at a glance; switch off for one colour.
-          The outline is drawn inside the track (an inset ring, not a border), so it takes no space. */}
-      <label className="flex cursor-pointer items-center gap-2.5 text-umber">
+      {/* "Mark gender": on by default (supervisor, 2026-11-02), so women stand out at a glance; click to use one colour.
+          Drawn as a button like the gender buttons next to it, bottle green when on and white when off, so the
+          row lines up (Siyan, 2026-11-17; it was a switch). Still a checkbox underneath, so it is read out as on / off. */}
+      <label
+        className={`flex h-9 cursor-pointer items-center rounded border px-3 font-bold select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-record ${
+          view.markGender ? 'border-bottle bg-bottle text-white' : 'border-umber/45 bg-white text-ink hover:bg-bottle-tint'
+        }`}
+      >
         <input
           type="checkbox"
-          role="switch"
           checked={view.markGender}
           onChange={(event) => set({ markGender: event.target.checked })}
-          className="peer sr-only"
+          className="sr-only"
         />
-        {/* The knob is a real element laid out by flexbox: 3px padding all round and centred
-            vertically, so the gap is the same on every side in every browser. On = knob at the end. */}
-        <span
-          aria-hidden="true"
-          className="flex h-6 w-11 shrink-0 items-center justify-start rounded-full bg-white p-[3px] ring-[1.5px] ring-umber ring-inset transition-colors peer-checked:justify-end peer-checked:bg-bottle peer-checked:ring-bottle peer-checked:*:bg-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-record"
-        >
-          <span className="h-[18px] w-[18px] shrink-0 rounded-full bg-umber" />
-        </span>
         Mark gender
       </label>
     </section>
@@ -177,18 +167,28 @@ function NameSearch({ value, onSearch }: { value: string; onSearch: (query: stri
   }
 
   return (
-    <label className={fieldLabel}>
-      Find a name
+    // No label beside the box: the hint inside says what it is, and the magnifying glass keeps it
+    // recognisable as a search box once the hint is gone (Siyan, 2026-11-17). Screen readers hear "Find a name".
+    <label className="relative flex items-center">
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 16 16"
+        className="pointer-events-none absolute left-3 h-4 w-4 text-umber"
+      >
+        <circle cx="6.75" cy="6.75" r="4.75" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        <path d="M10.3 10.3 14 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
       <input
         type="search"
+        aria-label="Find a name"
         value={text}
-        placeholder="e.g. Fitzgerald"
+        placeholder="Find a name, e.g. Fitzgerald"
         onChange={(event) => {
           setText(event.target.value)
           if (!(event.nativeEvent as InputEvent).isComposing) onSearch(event.target.value)
         }}
         onCompositionEnd={(event) => onSearch(event.currentTarget.value)}
-        className={`${fieldBox} w-56 px-3`}
+        className={`${fieldBox} w-64 pr-3 pl-9`}
       />
     </label>
   )

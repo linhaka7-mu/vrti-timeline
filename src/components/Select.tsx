@@ -143,8 +143,8 @@ export function Select<T extends string>({ value, options, onChange, labelledBy,
         onBlur={(event) => {
           if (!rootRef.current?.contains(event.relatedTarget as Node)) setOpen(false)
         }}
-        className={`flex h-9 cursor-pointer items-center gap-4 rounded border-[1.5px] bg-white pr-3.5 pl-3.5 text-base text-ink ${
-          open ? 'border-bottle' : 'border-umber hover:border-bottle'
+        className={`flex h-9 cursor-pointer items-center gap-4 rounded border bg-white pr-3.5 pl-3.5 text-base text-ink ${
+          open ? 'border-bottle' : 'border-umber/45 hover:border-bottle'
         }`}
       >
         {/* Every label sits in the same grid cell, so the box is as wide as the longest option and never jumps. */}

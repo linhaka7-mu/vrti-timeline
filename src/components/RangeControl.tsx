@@ -193,7 +193,7 @@ function YearInput({ label, value, onCommit }: YearInputProps) {
           // That Enter must not apply the year yet, or the letters land in the box afterwards.
           if (event.key === 'Enter' && !event.nativeEvent.isComposing) commit()
         }}
-        className="h-9 w-20 rounded border-[1.5px] border-umber bg-white px-3 font-type text-base text-ink focus:border-bottle"
+        className="h-9 w-20 rounded border border-umber/45 bg-white px-3 font-type text-base text-ink focus:border-bottle"
       />
   )
 }

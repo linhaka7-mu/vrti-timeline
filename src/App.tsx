@@ -51,7 +51,6 @@ function App() {
     [everyone, view.query, view.gender],
   )
   const shown = useMemo(() => (everyone ? applyListView(everyone, view) : undefined), [everyone, view])
-  const filtered = view.gender !== 'all' || view.source !== 'all' || view.query.trim() !== ''
 
   // Keep the address in step with the view, so it can be bookmarked or sent to a colleague.
   // replaceState: dragging the slider should not fill the Back button's history.
@@ -91,7 +90,6 @@ function App() {
               range={data?.range ?? settledRange}
               count={everyone?.length}
               shown={shown?.length}
-              filtered={filtered}
               yearControls={<YearBoxes range={range} onChange={setRange} />}
               sortControls={<SortControls view={view} onChange={setView} />}
               unreadable={data?.unreadable ?? 0}
