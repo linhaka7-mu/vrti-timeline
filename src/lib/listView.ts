@@ -11,15 +11,19 @@
 import { ageAtDeath } from './dates'
 import type { Gender, Person } from './people'
 import type { YearRange } from './range'
+import { isSourceId, SOURCES, type SourceId } from './sources'
 
 export type SortKey = 'birth' | 'death' | 'surname' | 'forename' | 'age'
 export type SortDirection = 'asc' | 'desc'
 export type GenderFilter = 'all' | Gender
+export type SourceFilter = 'all' | SourceId
 
 export interface ListView {
   sort: SortKey
   direction: SortDirection
   gender: GenderFilter
+  /** Data source (supervisor, 2026-11-17). */
+  source: SourceFilter
   /** Name search, as typed. Empty means no search. */
   query: string
   /**
@@ -30,7 +34,14 @@ export interface ListView {
 }
 
 /** Earliest birth first: the order the timeline has always used, now stated on the page. */
-export const DEFAULT_VIEW: ListView = { sort: 'birth', direction: 'asc', gender: 'all', query: '', markGender: true }
+export const DEFAULT_VIEW: ListView = {
+  sort: 'birth',
+  direction: 'asc',
+  gender: 'all',
+  source: 'all',
+  query: '',
+  markGender: true,
+}
 
 export const SORT_KEYS: SortKey[] = ['birth', 'death', 'surname', 'forename', 'age']
 
@@ -133,6 +144,21 @@ export function matchesGender(person: Person, gender: GenderFilter): boolean {
   return gender === 'all' || person.gender === gender
 }
 
+export function matchesSource(person: Person, source: SourceFilter): boolean {
+  return source === 'all' || person.sources.includes(source)
+}
+
+/**
+ * How many people each source would show, for the counts in the source menu. A person in two
+ * sources counts in both, so the counts can add up to more than "All sources".
+ */
+export function countBySource(people: Person[]): Record<SourceFilter, number> {
+  const counts = { all: people.length } as Record<SourceFilter, number>
+  for (const source of SOURCES) counts[source.id] = 0
+  for (const person of people) for (const source of person.sources) counts[source]++
+  return counts
+}
+
 /** How many people of each gender, for the counts next to the filter buttons. */
 export function countByGender(people: Person[]): Record<GenderFilter, number> {
   const counts = { all: people.length, female: 0, male: 0 }
@@ -142,12 +168,14 @@ export function countByGender(people: Person[]): Record<GenderFilter, number> {
 
 /** Filter, then sort. */
 export function applyListView(people: Person[], view: ListView): Person[] {
-  const kept = people.filter((p) => matchesGender(p, view.gender) && matchesName(p, view.query))
+  const kept = people.filter(
+    (p) => matchesGender(p, view.gender) && matchesSource(p, view.source) && matchesName(p, view.query),
+  )
   return sortPeople(kept, view.sort, view.direction)
 }
 
 /**
- * Reads the list settings from the page address (?sort=surname&dir=desc&gender=female&q=…&marks=none),
+ * Reads the list settings from the page address (?sort=surname&dir=desc&gender=female&source=dib&q=…&marks=none),
  * so a filtered view can be shared like a range can. Anything unknown falls back to the default.
  * "Mark gender" is on by default, so only switching it off is written (marks=none). Older links with
  * marks=gender, from when it was off by default, still open with it on.
@@ -157,10 +185,12 @@ export function listViewFromSearch(search: string): ListView {
   const sort = params.get('sort')
   const dir = params.get('dir')
   const gender = params.get('gender')
+  const source = params.get('source')
   return {
     sort: SORT_KEYS.includes(sort as SortKey) ? (sort as SortKey) : DEFAULT_VIEW.sort,
     direction: dir === 'asc' || dir === 'desc' ? dir : DEFAULT_VIEW.direction,
     gender: gender === 'female' || gender === 'male' ? gender : DEFAULT_VIEW.gender,
+    source: isSourceId(source) ? source : DEFAULT_VIEW.source,
     query: params.get('q') ?? DEFAULT_VIEW.query,
     markGender: marksFromParam(params.get('marks')),
   }
@@ -178,6 +208,7 @@ export function viewToSearch({ from, to }: YearRange, view: ListView): string {
   if (view.sort !== DEFAULT_VIEW.sort) params.set('sort', view.sort)
   if (view.direction !== DEFAULT_VIEW.direction) params.set('dir', view.direction)
   if (view.gender !== DEFAULT_VIEW.gender) params.set('gender', view.gender)
+  if (view.source !== DEFAULT_VIEW.source) params.set('source', view.source)
   if (view.query.trim()) params.set('q', view.query.trim())
   if (view.markGender !== DEFAULT_VIEW.markGender) params.set('marks', view.markGender ? 'gender' : 'none')
   return `?${params.toString()}`

@@ -5,16 +5,20 @@ import {
   SORT_LABELS,
   type GenderFilter,
   type ListView,
+  type SourceFilter,
   type SortDirection,
   type SortKey,
 } from '../lib/listView'
-import { Select } from './Select'
+import { SOURCES } from '../lib/sources'
+import { Select, type SelectOption } from './Select'
 
 interface ListControlsProps {
   view: ListView
   onChange: (view: ListView) => void
-  /** People in the range for each gender who match the name search. */
+  /** People in the range for each gender who match the name search and the source. */
   counts: Record<GenderFilter, number>
+  /** People in the range in each source who match the name search and the gender. */
+  sourceCounts: Record<SourceFilter, number>
 }
 
 const GENDER_OPTIONS: { value: GenderFilter; label: string }[] = [
@@ -24,40 +28,45 @@ const GENDER_OPTIONS: { value: GenderFilter; label: string }[] = [
 ]
 
 const fieldLabel = 'flex items-center gap-2 text-umber'
-const fieldBox = 'h-10 rounded border-[1.5px] border-umber bg-white px-2 text-base text-ink'
+const fieldBox = 'h-10 rounded border-[1.5px] border-umber bg-white px-2 text-base text-ink focus:border-bottle'
 
 /**
- * The row between the range controls and the timeline: name search, sort order, gender filter.
- * All three work on people already loaded, so they respond at once.
+ * The row between the range controls and the timeline: name search, data source, gender filter and
+ * "Mark gender". The sort boxes are in the status line below (SortControls). All of these work on
+ * people already loaded, so they respond at once.
  */
-export function ListControls({ view, onChange, counts }: ListControlsProps) {
+export function ListControls({ view, onChange, counts, sourceCounts }: ListControlsProps) {
   const set = (change: Partial<ListView>) => onChange({ ...view, ...change })
+  const n = (value: number) => value.toLocaleString('en-IE')
+  // A source with nobody here is still listed, greyed out with "(0)", so readers can see it exists
+  // (Siyan, 2026-11-17). The 1641 Depositions are the main case: their people have only event dates,
+  // which the timeline does not draw yet. The one chosen stays choosable even at 0, so it can be read.
+  const sourceOptions: SelectOption<SourceFilter>[] = [
+    { value: 'all', label: `All sources (${n(sourceCounts.all)})`, short: 'All sources' },
+    ...SOURCES.map((source) => {
+      const count = sourceCounts[source.id]
+      return {
+        value: source.id,
+        label: `${source.name} (${n(count)})`,
+        short: source.short,
+        disabled: count === 0 && view.source !== source.id,
+      }
+    }),
+  ]
 
   return (
     <section aria-label="Find and order people" className="flex flex-wrap items-center gap-x-6 gap-y-3 text-base">
       <NameSearch value={view.query} onSearch={(query) => set({ query })} />
 
       <div className="flex items-center gap-2">
-        <span id="sort-label" className="text-umber">
-          Sort by
+        <span id="source-label" className="text-umber">
+          Source
         </span>
         <Select
-          labelledBy="sort-label"
-          value={view.sort}
-          options={SORT_KEYS.map((key) => ({ value: key, label: SORT_LABELS[key] }))}
-          onChange={(sort: SortKey) => set({ sort })}
-        />
-        {/* The direction is named for the key ("A to Z", "oldest first"), never just "ascending". */}
-        <Select
-          ariaLabel="Order"
-          value={view.direction}
-          options={(['asc', 'desc'] as const).map((direction) => ({
-            value: direction,
-            label: directionLabel(view.sort, direction),
-          }))}
-          onChange={(direction: SortDirection) => set({ direction })}
-          // Wide enough for the longest wording of any sort key, so "Show" never shifts.
-          sizeFor={SORT_KEYS.flatMap((key) => [directionLabel(key, 'asc'), directionLabel(key, 'desc')])}
+          labelledBy="source-label"
+          value={view.source}
+          options={sourceOptions}
+          onChange={(source: SourceFilter) => set({ source })}
         />
       </div>
 
@@ -118,6 +127,36 @@ export function ListControls({ view, onChange, counts }: ListControlsProps) {
         Mark gender
       </label>
     </section>
+  )
+}
+
+/**
+ * The two sort boxes: key, then direction. They end the status sentence ("…sorted by [▾] [▾]").
+ * The visible words "sorted by" in that sentence name the first box; the second has its own name.
+ */
+export function SortControls({ view, onChange }: { view: ListView; onChange: (view: ListView) => void }) {
+  const set = (change: Partial<ListView>) => onChange({ ...view, ...change })
+  return (
+    <span className="flex items-center gap-2">
+      <Select
+        ariaLabel="Sort by"
+        value={view.sort}
+        options={SORT_KEYS.map((key) => ({ value: key, label: SORT_LABELS[key] }))}
+        onChange={(sort: SortKey) => set({ sort })}
+      />
+      {/* The direction is named for the key ("A to Z", "oldest first"), never just "ascending". */}
+      <Select
+        ariaLabel="Order"
+        value={view.direction}
+        options={(['asc', 'desc'] as const).map((direction) => ({
+          value: direction,
+          label: directionLabel(view.sort, direction),
+        }))}
+        onChange={(direction: SortDirection) => set({ direction })}
+        // Wide enough for the longest wording of any sort key, so nothing after it shifts.
+        sizeFor={SORT_KEYS.flatMap((key) => [directionLabel(key, 'asc'), directionLabel(key, 'desc')])}
+      />
+    </span>
   )
 }
 

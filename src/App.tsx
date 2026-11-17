@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Legend } from './components/Legend'
-import { ListControls } from './components/ListControls'
+import { ListControls, SortControls } from './components/ListControls'
 import { CornerFringe, StarDivider } from './components/Ornaments'
 import { RangeControl } from './components/RangeControl'
 import { StatusLine } from './components/StatusLine'
@@ -10,10 +10,11 @@ import { usePeopleAlive } from './hooks/usePeopleAlive'
 import {
   applyListView,
   countByGender,
-  DEFAULT_VIEW,
-  describeOrder,
+  countBySource,
   listViewFromSearch,
+  matchesGender,
   matchesName,
+  matchesSource,
   viewToSearch,
   type ListView,
 } from './lib/listView'
@@ -34,15 +35,23 @@ function App() {
   const everyone = data?.people
   // The counts on the Everyone / Women / Men buttons follow the name search, so they always say
   // how many people each button would show.
+  // Each filter's counts follow the other filters, so they say how many people choosing it would show.
   const counts = useMemo(
-    () => countByGender((everyone ?? []).filter((person) => matchesName(person, view.query))),
-    [everyone, view.query],
+    () =>
+      countByGender(
+        (everyone ?? []).filter((person) => matchesName(person, view.query) && matchesSource(person, view.source)),
+      ),
+    [everyone, view.query, view.source],
+  )
+  const sourceCounts = useMemo(
+    () =>
+      countBySource(
+        (everyone ?? []).filter((person) => matchesName(person, view.query) && matchesGender(person, view.gender)),
+      ),
+    [everyone, view.query, view.gender],
   )
   const shown = useMemo(() => (everyone ? applyListView(everyone, view) : undefined), [everyone, view])
-  const filters = [
-    view.gender === 'female' ? 'women only' : view.gender === 'male' ? 'men only' : null,
-    view.query.trim() ? `names matching “${view.query.trim()}”` : null,
-  ].filter((text): text is string => text !== null)
+  const filtered = view.gender !== 'all' || view.source !== 'all' || view.query.trim() !== ''
 
   // Keep the address in step with the view, so it can be bookmarked or sent to a colleague.
   // replaceState: dragging the slider should not fill the Back button's history.
@@ -77,14 +86,13 @@ function App() {
           <RangeControl range={range} onChange={setRange} />
           <StarDivider />
           <div className="flex flex-col gap-4">
-            <ListControls view={view} onChange={setView} counts={counts} />
+            <ListControls view={view} onChange={setView} counts={counts} sourceCounts={sourceCounts} />
             <StatusLine
               range={data?.range ?? settledRange}
               count={everyone?.length}
               shown={shown?.length}
-              filters={filters}
-              order={describeOrder(view)}
-              onClearFilters={() => setView({ ...view, gender: DEFAULT_VIEW.gender, query: DEFAULT_VIEW.query })}
+              filtered={filtered}
+              sortControls={<SortControls view={view} onChange={setView} />}
               unreadable={data?.unreadable ?? 0}
               loading={loading}
               error={error}
@@ -97,7 +105,7 @@ function App() {
             {data && shown && shown.length > 0 && (
               // A new order or filter starts the list from the top again (the key makes a fresh timeline).
               <Timeline
-                key={`${view.sort}|${view.direction}|${view.gender}|${view.query}`}
+                key={`${view.sort}|${view.direction}|${view.gender}|${view.source}|${view.query}`}
                 people={shown}
                 range={data.range}
                 markGender={view.markGender}

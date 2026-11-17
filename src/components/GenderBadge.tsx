@@ -14,7 +14,10 @@ export function GenderBadge({ gender }: { gender: Gender }) {
         woman ? 'bg-bottle text-white' : 'border-[1.2px] border-umber text-umber'
       }`}
     >
-      <span aria-hidden="true">{woman ? 'F' : 'M'}</span>
+      {/* Alegreya Sans capitals sit a little high in a leading-none box; 1px down centres them (Siyan, 2026-11-17). */}
+      <span aria-hidden="true" className="translate-y-px">
+        {woman ? 'F' : 'M'}
+      </span>
       <span className="sr-only">{woman ? 'Woman:' : 'Man:'}</span>
     </span>
   )

@@ -12,18 +12,20 @@ export function Legend({ markGender }: { markGender: boolean }) {
       <ul className="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">
         <li className="flex items-center gap-2">
           <span aria-hidden="true" className="h-2.5 w-9 bg-person" />
-          Alive (dates known)
+          Certainly alive
         </li>
         <li className="flex items-center gap-2">
           <span aria-hidden="true" className="flex items-center">
             <span className="box-border h-3.5 w-3.5 border border-person bg-person-light" />
             <span className="h-2.5 w-5 bg-person" />
           </span>
-          Birth or death known only to the year (or a span): it happened somewhere in the light part
+          Birth or death known only roughly: somewhere in the light part
         </li>
         <li className="flex items-center gap-2">
-          <span aria-hidden="true" className="h-3.5 w-9 border border-ink/15 bg-paper" />
-          Pale years on the axis: 50 years before and after your range, so whole lives are shown
+          <span aria-hidden="true" className="rounded-[3px] bg-white/60 px-1 font-type text-[12.5px] text-umber/45">
+            1475
+          </span>
+          Pale years: 50 years either side of your range, so whole lives show
         </li>
       </ul>
       {markGender && (
@@ -34,7 +36,7 @@ export function Legend({ markGender }: { markGender: boolean }) {
               <span className="box-border h-3.5 w-3.5 border border-woman bg-woman-light" />
               <span className="h-2.5 w-5 bg-woman" />
             </span>
-            Woman: pink, same dark / light rule
+            Woman
           </li>
           <li className="flex items-center gap-2">
             <GenderBadge gender="male" />
@@ -42,7 +44,7 @@ export function Legend({ markGender }: { markGender: boolean }) {
               <span className="box-border h-3.5 w-3.5 border border-person bg-person-light" />
               <span className="h-2.5 w-5 bg-person" />
             </span>
-            Man: blue
+            Man
           </li>
         </ul>
       )}

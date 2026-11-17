@@ -3,6 +3,7 @@ import { toInterval } from './dates'
 import {
   applyListView,
   countByGender,
+  countBySource,
   DEFAULT_VIEW,
   describeOrder,
   listViewFromSearch,
@@ -20,6 +21,7 @@ function person(
   birth: [string, string],
   death: [string, string],
   gender?: 'female' | 'male',
+  sources: Person['sources'] = ['dib'],
 ): Person {
   const name = [names.forename, names.surname].filter(Boolean).join(' ') || id
   return {
@@ -29,6 +31,7 @@ function person(
     gender,
     birth: toInterval(...birth)!,
     death: toInterval(...death)!,
+    sources,
     issues: [],
   }
 }
@@ -86,6 +89,28 @@ describe('applyListView', () => {
   })
   it('a person without a recorded gender only appears under "all"', () => {
     expect(ids(applyListView(everyone, { ...DEFAULT_VIEW, gender: 'female' }))).toEqual(['ef'])
+  })
+})
+
+describe('source filter', () => {
+  const staple = person('st', { forename: 'John', surname: 'Bysse' }, ['1560-01-01', '1560-12-31'], ['1620-01-01', '1620-12-31'], 'male', ['dib', 'staple'])
+  it('keeps people recorded in the chosen source, including those also in another', () => {
+    expect(ids(applyListView([nugent, staple], { ...DEFAULT_VIEW, source: 'staple' }))).toEqual(['st'])
+    expect(ids(applyListView([nugent, staple], { ...DEFAULT_VIEW, source: 'dib' }))).toEqual(['cn', 'st'])
+  })
+  it('counts a person in every source they are in', () => {
+    const counts = countBySource([nugent, staple])
+    expect(counts.all).toBe(2)
+    expect(counts.dib).toBe(2)
+    expect(counts.staple).toBe(1)
+    expect(counts.depositions).toBe(0)
+  })
+  it('goes into the address and back', () => {
+    const view = { ...DEFAULT_VIEW, source: 'depositions' as const }
+    const search = viewToSearch({ from: 1500, to: 1749 }, view)
+    expect(search).toBe('?from=1500&to=1749&source=depositions')
+    expect(listViewFromSearch(search)).toEqual(view)
+    expect(listViewFromSearch('?source=nowhere').source).toBe('all')
   })
 })
 

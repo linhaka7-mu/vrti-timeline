@@ -1,4 +1,5 @@
 import { ageAtDeath, padYear, toInterval, type Interval } from './dates'
+import { sourceOfGraph, SOURCES, type SourceId } from './sources'
 import { runSelect, type Binding } from './sparql'
 
 /** A person who can be drawn as a lifetime bar: they have both a birth and a death time-span. */
@@ -14,6 +15,8 @@ export interface Person {
   gender?: Gender
   birth: Interval
   death: Interval
+  /** The data sources this person is recorded in (usually one; 27 of 2,330 in 1500–1749 have more). */
+  sources: SourceId[]
   /** Things in the data that do not add up. The timeline shows them instead of hiding them (handbook §3.10–3.11). */
   issues: string[]
 }
@@ -47,13 +50,15 @@ export interface PeopleResult {
  * - Gender is a P2_has_type on the person: vrti:Female or vrti:Male. For 1500–1749 all 2,330 people
  *   have one, and none has both (2,226 male, 104 female; checked 2026-10-29). The FILTER keeps any
  *   other type a person may carry out of the result.
+ * - Source: the named graph the person is typed in (sources.ts). One row per graph, so the few people
+ *   in several sources come back as a few rows each; toPeople merges them.
  */
 export function peopleAliveQuery(from: number, to: number): string {
   return `PREFIX crm: <http://erlangen-crm.org/current/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX vrti: <https://www.w3id.org/virtual-treasury/ontology#>
-SELECT DISTINCT ?person ?label ?forename ?surname ?gender ?birthStart ?birthEnd ?deathStart ?deathEnd WHERE {
+SELECT DISTINCT ?person ?label ?forename ?surname ?gender ?graph ?birthStart ?birthEnd ?deathStart ?deathEnd WHERE {
   ?birth a crm:E67_Birth ;
          crm:P98_brought_into_life ?person ;
          crm:P4_has_time-span ?birthSpan .
@@ -72,6 +77,7 @@ SELECT DISTINCT ?person ?label ?forename ?surname ?gender ?birthStart ?birthEnd 
              ?forenameNode crm:P2_has_type vrti:Forename ; rdfs:label ?forename }
   OPTIONAL { ?person crm:P2_has_type ?gender .
              FILTER(?gender IN (vrti:Female, vrti:Male)) }
+  OPTIONAL { GRAPH ?graph { ?person a crm:E21_Person } }
 }`
 }
 
@@ -112,6 +118,7 @@ export function toPeople(rows: Binding[]): PeopleResult {
     forename?: string
     surname?: string
     genders: Set<Gender>
+    sources: Set<SourceId>
     births: Map<string, Interval>
     deaths: Map<string, Interval>
   }
@@ -129,7 +136,7 @@ export function toPeople(rows: Binding[]): PeopleResult {
     }
     let group = groups.get(uri)
     if (!group) {
-      group = { uri, genders: new Set(), births: new Map(), deaths: new Map() }
+      group = { uri, genders: new Set(), sources: new Set(), births: new Map(), deaths: new Map() }
       groups.set(uri, group)
     }
     if (!group.label && row.label?.value) group.label = row.label.value
@@ -137,6 +144,8 @@ export function toPeople(rows: Binding[]): PeopleResult {
     if (!group.surname && row.surname?.value) group.surname = row.surname.value
     const gender = toGender(row.gender?.value)
     if (gender) group.genders.add(gender)
+    const source = sourceOfGraph(row.graph?.value)
+    if (source) group.sources.add(source)
     group.births.set(`${birth.raw.begin}|${birth.raw.end}`, birth)
     group.deaths.set(`${death.raw.begin}|${death.raw.end}`, death)
   }
@@ -163,6 +172,8 @@ export function toPeople(rows: Binding[]): PeopleResult {
       gender,
       birth,
       death,
+      // In the order of SOURCES, so a person in two sources always lists them the same way.
+      sources: SOURCES.map((s) => s.id).filter((id) => group.sources.has(id)),
       issues,
     })
   }

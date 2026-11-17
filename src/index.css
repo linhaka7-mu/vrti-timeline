@@ -87,6 +87,12 @@
     outline: 2px solid var(--color-record);
     outline-offset: 2px;
   }
+  /* Text boxes (name search, the two years): no red ring when clicked, only the caret, and the
+     border turns bottle green like an open drop-down (focus:border-bottle on each box; Siyan, 2026-11-17). The colour change still
+     shows keyboard users which box they are in. */
+  input:is([type='search'], [type='text'], :not([type])):focus-visible {
+    outline: none;
+  }
 }
 
 /*

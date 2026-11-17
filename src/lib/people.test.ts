@@ -33,6 +33,9 @@ describe('peopleAliveQuery', () => {
     expect(q).toContain('?deathEnd >= "0400-01-01"^^xsd:date')
     expect(q).toContain('SELECT DISTINCT')
   })
+  it('asks which named graph each person is in (the data source)', () => {
+    expect(peopleAliveQuery(1500, 1749)).toContain('GRAPH ?graph { ?person a crm:E21_Person }')
+  })
   it('asks for gender, but only the two gender types', () => {
     expect(peopleAliveQuery(1500, 1749)).toContain('FILTER(?gender IN (vrti:Female, vrti:Male))')
   })
@@ -91,6 +94,16 @@ describe('toPeople', () => {
   it('falls back to a name from the URI when there is no label', () => {
     const { people } = toPeople([row(NUGENT, ['1544-01-01', '1544-12-31'], ['1602-01-01', '1602-12-31'])])
     expect(people[0].name).toBe('Nugent Christopher')
+  })
+
+  it('collects the data sources from the named graphs, ignoring the events graphs', () => {
+    const base = row(NUGENT, ['1544-01-01', '1544-12-31'], ['1602-01-01', '1602-12-31'])
+    const { people } = toPeople([
+      { ...base, graph: uri('https://kg.virtualtreasury.ie/graph/VOICES-staple-v2') },
+      { ...base, graph: uri('https://kg.virtualtreasury.ie/graph/VOICES-staple-events-v1') },
+      { ...base, graph: uri('https://kg.virtualtreasury.ie/graph/DIB-v1') },
+    ])
+    expect(people[0].sources).toEqual(['dib', 'staple'])
   })
 
   it('flags a death before the birth instead of hiding it (Art MacMurrough)', () => {

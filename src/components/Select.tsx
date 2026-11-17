@@ -3,6 +3,10 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 export interface SelectOption<T extends string> {
   value: T
   label: string
+  /** Shown in the closed box instead of `label`, when the full label is too long for it. */
+  short?: string
+  /** Listed but greyed out and not choosable (for example a data source with nobody in the range). */
+  disabled?: boolean
 }
 
 interface SelectProps<T extends string> {
@@ -45,8 +49,14 @@ export function Select<T extends string>({ value, options, onChange, labelledBy,
     setOpen(true)
   }
   const choose = (index: number) => {
+    if (options[index].disabled) return
     setOpen(false)
     if (options[index].value !== value) onChange(options[index].value)
+  }
+  // The next option in a direction that can be chosen (disabled ones are skipped by the arrow keys).
+  const step = (from: number, by: 1 | -1) => {
+    for (let i = from + by; i >= 0 && i < options.length; i += by) if (!options[i].disabled) return i
+    return from
   }
 
   // Close when the user clicks anywhere outside.
@@ -79,11 +89,11 @@ export function Select<T extends string>({ value, options, onChange, labelledBy,
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault()
-        setActive((i) => Math.min(last, i + 1))
+        setActive((i) => step(i, 1))
         return
       case 'ArrowUp':
         event.preventDefault()
-        setActive((i) => Math.max(0, i - 1))
+        setActive((i) => step(i, -1))
         return
       case 'Home':
       case 'End':
@@ -96,7 +106,8 @@ export function Select<T extends string>({ value, options, onChange, labelledBy,
         choose(active)
         return
       case 'Tab':
-        choose(active) // no preventDefault: focus still moves on, as with a native select
+        if (options[active].disabled) setOpen(false)
+        else choose(active) // no preventDefault: focus still moves on, as with a native select
         return
       case 'Escape':
         event.preventDefault()
@@ -108,7 +119,7 @@ export function Select<T extends string>({ value, options, onChange, labelledBy,
       const letter = event.key.toLowerCase()
       for (let step = 1; step <= options.length; step++) {
         const i = (active + step) % options.length
-        if (options[i].label.toLowerCase().startsWith(letter)) {
+        if (!options[i].disabled && options[i].label.toLowerCase().startsWith(letter)) {
           setActive(i)
           break
         }
@@ -145,7 +156,7 @@ export function Select<T extends string>({ value, options, onChange, labelledBy,
               aria-hidden={i !== selectedIndex}
               className={`col-start-1 row-start-1 whitespace-nowrap ${i === selectedIndex ? '' : 'invisible'}`}
             >
-              {option.label}
+              {option.short ?? option.label}
             </span>
           ))}
           {sizeFor.map((label) => (
@@ -170,23 +181,30 @@ export function Select<T extends string>({ value, options, onChange, labelledBy,
           role="listbox"
           aria-labelledby={labelledBy}
           aria-label={labelledBy ? undefined : ariaLabel}
-          className="absolute top-[calc(100%+4px)] left-0 z-20 m-0 max-h-72 min-w-full list-none overflow-y-auto rounded-md border-[1.5px] border-bottle bg-white p-1 shadow-[0_6px_18px_rgb(46_74_51/0.18)]"
+          className="absolute top-[calc(100%+4px)] left-0 z-20 m-0 max-h-96 min-w-full list-none overflow-y-auto rounded-md border-[1.5px] border-bottle bg-white p-1 shadow-[0_6px_18px_rgb(46_74_51/0.18)]"
         >
           {options.map((option, i) => {
             const selected = i === selectedIndex
-            const highlighted = i === active
+            const highlighted = i === active && !option.disabled
             return (
               <li
                 key={option.value}
                 id={`${id}-${i}`}
                 role="option"
                 aria-selected={selected}
+                aria-disabled={option.disabled || undefined}
                 // pointerdown + preventDefault keeps focus on the button, so the keyboard keeps working.
                 onPointerDown={(event) => event.preventDefault()}
                 onClick={() => choose(i)}
-                onPointerMove={() => setActive(i)}
-                className={`flex cursor-pointer items-center gap-2.5 rounded-sm py-2 pr-4 pl-2.5 whitespace-nowrap ${
-                  selected ? 'bg-bottle font-bold text-white' : highlighted ? 'bg-bottle-tint text-ink' : 'text-ink'
+                onPointerMove={() => !option.disabled && setActive(i)}
+                className={`flex items-center gap-2.5 rounded-sm py-2 pr-4 pl-2.5 whitespace-nowrap ${
+                  option.disabled
+                    ? 'cursor-default text-umber/45'
+                    : selected
+                      ? 'cursor-pointer bg-bottle font-bold text-white'
+                      : highlighted
+                        ? 'cursor-pointer bg-bottle-tint text-ink'
+                        : 'cursor-pointer text-ink'
                 } ${selected && highlighted ? 'ring-2 ring-bottle/30 ring-inset' : ''}`}
               >
                 <svg aria-hidden="true" viewBox="0 0 12 10" className={`h-2.5 w-3 shrink-0 ${selected ? '' : 'invisible'}`}>
