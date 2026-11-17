@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Legend } from './components/Legend'
 import { ListControls, SortControls } from './components/ListControls'
-import { CornerFringe, StarDivider } from './components/Ornaments'
+import { CornerFringe } from './components/Ornaments'
 import { RangeControl, YearBoxes } from './components/RangeControl'
 import { StatusLine } from './components/StatusLine'
 import { Timeline, TimelineSkeleton } from './components/Timeline'
@@ -81,9 +81,10 @@ function App() {
           </div>
         </header>
 
-        <main className="flex flex-col gap-6">
+        {/* No star divider between choosing a time and choosing people: a wider gap separates them
+            (sketch page 设计备份/整体层次方案 2026-11-17.html, idea 4, Siyan, 2026-11-17). */}
+        <main className="flex flex-col gap-9">
           <RangeControl range={range} onChange={setRange} />
-          <StarDivider />
           <div className="flex flex-col gap-4">
             <ListControls view={view} onChange={setView} counts={counts} sourceCounts={sourceCounts} />
             <StatusLine

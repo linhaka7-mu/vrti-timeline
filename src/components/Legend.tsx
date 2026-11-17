@@ -7,6 +7,8 @@ import { GenderBadge } from './GenderBadge'
  * Small and in umber, one run of items that wraps when it has to, so it reads like a footnote and
  * does not compete with the status sentence (sketch page 设计备份/图例位置方案 2026-11-17.html,
  * option 1, Siyan's choice). The gender items appear only while "Mark gender" is on.
+ * It ends with what is not drawn yet, so the key and its one caveat are one footnote under the
+ * status sentence (sketch page 设计备份/整体层次方案 2026-11-17.html, idea 3, Siyan, 2026-11-17).
  * The light (uncertain) swatches are taller than the dark ones, as on the timeline.
  */
 export function Legend({ markGender }: { markGender: boolean }) {
@@ -50,6 +52,12 @@ export function Legend({ markGender }: { markGender: boolean }) {
           </li>
         </>
       )}
+      <li className="whitespace-nowrap">
+        <span aria-hidden="true" className="mr-5 text-umber/50">
+          ·
+        </span>
+        Not shown yet: people known only from archival records or estimated dates
+      </li>
     </ul>
   )
 }

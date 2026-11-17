@@ -8,35 +8,19 @@ interface RangeControlProps {
 }
 
 /**
- * Which era label each button shows. Eras are drawn to scale, so Post-1922 is only ~6% of the slider:
- * each button picks the longest label that fits its own width (CSS container queries).
- * The label texts (name, short, tiny) live in ERAS (lib/range.ts), shared with the timeline's era names.
- * The widths here are per era because the names differ in length. They are the measured text widths
- * in Alegreya Sans plus ~4px (measured 2026-10-19), compared with the button's inner width.
- * Tailwind only sees class names written out in full, so each one is spelled out here.
- *   full  = name + years · short = shorter name only · tiny = abbreviation
+ * The eras are a row of thin labels under the density chart, name over years ("Early Modern" /
+ * "1500–1749"), the chosen one in bold bottle green (sketch page 设计备份/整体层次方案 2026-11-17.html,
+ * idea 1, Siyan, 2026-11-17; they used to be tall straw buttons). Two short lines rather than one long
+ * one, because Post-1922 is only ~6% of the width (~70px on a full screen): one line could not hold
+ * "Post-1922 1923–". Each label still shows as much as fits its own width (container queries):
+ * name + years → short name → abbreviation. Thresholds: estimated text widths in Alegreya Sans
+ * (13px bold name) plus the 8px left padding, rounded up. Tailwind only sees class names written in full.
  */
-const ERA_BUTTON_FIT: Record<string, { showFull: string; showShort: string; showTiny: string }> = {
-  Medieval: {
-    showFull: '@min-[60px]:block',
-    showShort: '@min-[52px]:block @min-[60px]:hidden',
-    showTiny: '@min-[52px]:hidden',
-  },
-  'Early Modern': {
-    showFull: '@min-[78px]:block',
-    showShort: '@min-[56px]:block @min-[78px]:hidden',
-    showTiny: '@min-[56px]:hidden',
-  },
-  Modern: {
-    showFull: '@min-[50px]:block',
-    showShort: '@min-[44px]:block @min-[50px]:hidden',
-    showTiny: '@min-[44px]:hidden',
-  },
-  'Post-1922': {
-    showFull: '@min-[57px]:block',
-    showShort: '@min-[53px]:block @min-[57px]:hidden',
-    showTiny: '@min-[53px]:hidden',
-  },
+const ERA_LABEL_FIT: Record<string, { full: string; short: string; tiny: string }> = {
+  Medieval: { full: '@min-[64px]:flex', short: '', tiny: '@min-[64px]:hidden' },
+  'Early Modern': { full: '@min-[92px]:flex', short: '@min-[70px]:flex @min-[92px]:hidden', tiny: '@min-[70px]:hidden' },
+  Modern: { full: '@min-[64px]:flex', short: '', tiny: '@min-[64px]:hidden' },
+  'Post-1922': { full: '@min-[66px]:flex', short: '', tiny: '@min-[66px]:hidden' },
 }
 
 /** Position of a year along the slider, 0–100 %. */
@@ -56,59 +40,26 @@ export function RangeControl({ range, onChange }: RangeControlProps) {
   const setTo = (to: number) => onChange({ from: range.from, to: Math.max(to, range.from) })
 
   return (
-    <section aria-label="Choose a time range" className="flex flex-col gap-2">
+    <section aria-label="Choose a time range" className="flex flex-col gap-1 pt-4">
+      {/* pt-4 above: room for the density chart's hover tip, which opens above the chart and otherwise
+          sat on the header's rule (Siyan, 2026-11-17). */}
       {/* 0 · How many people each decade holds, on the same scale as the eras and the slider,
           so people can see where the data is before they choose (sketch page 2026-11-14, option D).
-          It sits above the era buttons so the buttons stay right next to the slider they move (Siyan, 2026-11-14). */}
+          It sits above the era labels, which divide it into eras (Siyan, 2026-11-14 and 11-17). */}
       <div className="relative mx-[7px] h-10">
         <DensityChart range={range} />
       </div>
-      {/* 1 · The eras: they are the obvious thing to click. Drawn to scale: Medieval really is 1,100 years wide. */}
-      <div className="relative mx-[7px] h-12">
-        {ERAS.map((era) => {
-          const selected = range.from === era.from && range.to === era.to
-          const labels = ERA_BUTTON_FIT[era.name]
-          const fullName = `${era.name}, ${era.from} to ${era.to}` // for hover and screen readers, whatever fits on screen
-          return (
-            <button
-              key={era.name}
-              type="button"
-              aria-pressed={selected}
-              aria-label={fullName}
-              title={fullName}
-              onClick={() => onChange({ from: era.from, to: era.to })}
-              className={`@container absolute top-0 flex h-12 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-sm border px-1 ${
-                selected ? 'border-bottle bg-bottle text-paper' : 'border-straw-edge bg-straw text-ink hover:bg-straw-edge'
-              }`}
-              style={{
-                left: `calc(${along(era.from)}% + 2px)`,
-                width: `calc(${along(era.to + 1) - along(era.from)}% - 4px)`,
-              }}
-            >
-              <span aria-hidden="true" className={`hidden text-sm font-bold whitespace-nowrap ${labels.showFull}`}>
-                {era.name}
-              </span>
-              <span aria-hidden="true" className={`hidden text-xs whitespace-nowrap ${labels.showFull}`}>
-                {era.label}
-              </span>
-              <span aria-hidden="true" className={`hidden text-[13px] font-bold whitespace-nowrap ${labels.showShort}`}>
-                {era.short}
-              </span>
-              <span aria-hidden="true" className={`text-xs font-bold whitespace-nowrap ${labels.showTiny}`}>
-                {era.tiny}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-      {/* 2 · The slider, under the era buttons, so clicking an era visibly moves it (supervisor, 2026-11-02).
-          Two native range inputs share one track, so keyboards and screen readers work as usual. */}
-      <div className="relative h-6">
-        {/* The thumbs are 14px wide and their centres travel 7px in from each end, hence mx-[7px]. */}
-        <div className="absolute inset-x-[7px] top-0 h-6">
-          <div className="absolute inset-x-0 top-[9px] h-1.5 rounded-full bg-linen" />
+      {/* The slider sits right under the chart, on the line that divides the chart from the era labels,
+          so each handle is under the columns it bounds (sketch page 设计备份/滑块方案 2026-11-17.html,
+          option A, Siyan, 2026-11-17). The "400 · 2025" line under it is gone: the era labels say 400,
+          and the right end is the present. Two native range inputs share one track, so keyboards and
+          screen readers work as usual. */}
+      <div className="relative h-[18px]">
+        {/* The thumbs are 14px wide and their centres travel 7px in from each end, hence inset-x-[7px]. */}
+        <div className="absolute inset-x-[7px] top-0 h-[18px]">
+          <div className="absolute inset-x-0 top-[8.5px] h-px bg-straw-edge" />
           <div
-            className="absolute top-[7px] h-2.5 rounded-sm bg-bottle"
+            className="absolute top-[7px] h-1 rounded-sm bg-bottle"
             style={{ left: `${along(range.from)}%`, width: `${along(range.to) - along(range.from)}%` }}
           />
         </div>
@@ -133,10 +84,42 @@ export function RangeControl({ range, onChange }: RangeControlProps) {
           className="dual-range absolute inset-0"
         />
       </div>
-
-      <div className="mx-[7px] flex justify-between font-type text-[13px] text-umber" aria-hidden="true">
-        <span>{DOMAIN_START}</span>
-        <span>{DOMAIN_END}</span>
+      {/* 1 · The eras, as thin labels right under the chart they divide. Drawn to scale: Medieval really is
+          1,100 years wide. Clicking one chooses the whole era. */}
+      <div className="relative mx-[7px] h-10">
+        {ERAS.map((era) => {
+          const selected = range.from === era.from && range.to === era.to
+          const fit = ERA_LABEL_FIT[era.name]
+          const fullName = `${era.name}, ${era.from} to ${era.to}` // for hover and screen readers, whatever fits on screen
+          const weight = selected ? 'font-bold' : ''
+          return (
+            <button
+              key={era.name}
+              type="button"
+              aria-pressed={selected}
+              aria-label={fullName}
+              title={fullName}
+              onClick={() => onChange({ from: era.from, to: era.to })}
+              className={`@container absolute top-0 flex h-10 cursor-pointer items-center overflow-hidden bg-transparent pl-2 text-left whitespace-nowrap select-none ${
+                era.from > DOMAIN_START ? 'border-l border-straw-edge' : ''
+              } ${selected ? 'text-bottle' : 'text-umber hover:text-bottle'}`}
+              style={{ left: `${along(era.from)}%`, width: `${along(era.to + 1) - along(era.from)}%` }}
+            >
+              <span aria-hidden="true" className={`hidden flex-col leading-tight ${fit.full}`}>
+                <span className={`text-[13px] ${weight}`}>{era.name}</span>
+                <span className={`text-[11.5px] ${selected ? 'text-bottle/75' : 'text-umber/75'}`}>{era.label}</span>
+              </span>
+              {fit.short && (
+                <span aria-hidden="true" className={`hidden text-[13px] ${weight} ${fit.short}`}>
+                  {era.short}
+                </span>
+              )}
+              <span aria-hidden="true" className={`text-xs ${weight} ${fit.tiny}`}>
+                {era.tiny}
+              </span>
+            </button>
+          )
+        })}
       </div>
     </section>
   )
