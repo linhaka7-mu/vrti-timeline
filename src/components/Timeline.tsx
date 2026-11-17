@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent, type RefObject } from 're
 import { ageAtDeath } from '../lib/dates'
 import { lifeBarSegments, lifeYears, mayBeAliveIn, toPercent, yearAt, type Segment } from '../lib/geometry'
 import type { Gender, Person } from '../lib/people'
-import { ERAS, eraBands, tickYears, type EraBand, type YearRange } from '../lib/range'
+import { displayRange, ERAS, eraBands, rangeBand, tickYears, type EraBand, type YearRange } from '../lib/range'
 import { GenderBadge } from './GenderBadge'
 import { CARD_WIDTH, PersonCard } from './PersonCard'
 
@@ -85,8 +85,11 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
   const hideTimer = useRef<number | undefined>(undefined)
   const wrapRef = useRef<HTMLDivElement>(null)
   const plotRef = useRef<HTMLDivElement>(null)
-  const ticks = tickYears(range)
-  const bands = eraBands(range)
+  // Drawn 50 years wider than the chosen range, so lives that start or end outside it are not cut short.
+  // `range` still decides who is listed (the query); `view` only decides what is drawn.
+  const view = displayRange(range)
+  const ticks = tickYears(view)
+  const bands = eraBands(view)
   // A card for someone who is no longer listed (new range, filter, search) is simply not shown.
   const shownCard = card && people.includes(card.person) ? card : null
 
@@ -120,7 +123,7 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
     if (!plot || !wrap) return
     const fraction = (event.clientX - plot.left) / plot.width
     if (fraction < 0 || fraction >= 1) return setYearLine(null)
-    setYearLine({ year: yearAt(fraction, range), x: event.clientX - wrap.left })
+    setYearLine({ year: yearAt(fraction, view), x: event.clientX - wrap.left })
   }
   const aliveCount = yearLine
     ? people.filter((p) => mayBeAliveIn(p.birth, p.death, yearLine.year)).length
@@ -160,7 +163,7 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
       </p>
 
       <div ref={wrapRef} className="relative" onMouseMove={moveYearLine} onMouseLeave={() => setYearLine(null)}>
-        <Axis range={range} ticks={ticks} bands={bands} updating={updating} plotRef={plotRef} />
+        <Axis range={view} selected={range} ticks={ticks} bands={bands} updating={updating} plotRef={plotRef} />
 
         <div
           className={`overflow-y-auto transition-opacity duration-200 [scrollbar-gutter:stable] ${updating ? 'opacity-55' : ''}`}
@@ -176,7 +179,7 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
               <PersonRow
                 key={person.uri}
                 person={person}
-                range={range}
+                range={view}
                 ticks={ticks}
                 top={(first + i) * ROW_HEIGHT}
                 striped={(first + i) % 2 === 1}
@@ -199,10 +202,13 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
         {yearLine && (
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 z-10 border-l-[1.5px] border-bottle"
+            className="pointer-events-none absolute top-[55px] bottom-0 z-10 border-l-[1.5px] border-bottle"
             style={{ left: yearLine.x }}
           >
-            <span className="absolute top-0 -translate-x-1/2 rounded-full bg-bottle px-2 py-px font-type text-[13px] whitespace-nowrap text-white">
+            {/* Level with the axis years and the same size as them (Siyan, 2026-11-17), so it reads as
+                one more year on the axis and stays clear of the "Your range" brace above. The line
+                starts at the label. */}
+            <span className="absolute top-0 -translate-x-1/2 rounded-[4px] bg-bottle px-1.5 font-type text-[13px] leading-tight whitespace-nowrap text-white">
               {yearLine.year}
             </span>
           </div>
@@ -230,12 +236,16 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
  */
 function Axis({
   range,
+  selected,
   ticks,
   bands,
   updating,
   plotRef,
 }: {
+  /** What is drawn: the chosen range plus its margins. */
   range: YearRange
+  /** What the user chose: marked by the ruler, and its years are written darker than the margins'. */
+  selected: YearRange
   ticks: number[]
   bands: EraBand[]
   updating: boolean
@@ -245,8 +255,14 @@ function Axis({
   return (
     <div className={`relative flex overflow-hidden border-b border-copper text-[13px] text-umber [scrollbar-gutter:stable] ${END_GAP}`}>
       <div className={`${LABEL_WIDTH} shrink-0`} />
-      <div ref={plotRef} className="relative h-12 flex-1">
-        <EraBands bands={bands} />
+      <div ref={plotRef} className="relative h-20 flex-1">
+        {/* On the axis the eras are only named and divided by their dashed lines, without the straw
+            shading: shaded here, part of an era band inside the brace looked like a highlight of the
+            chosen range (Siyan, 2026-11-17). The rows below keep the shading. */}
+        <div className="absolute inset-x-0 top-[35px] bottom-0">
+          <EraBands bands={bands} linesOnly />
+        </div>
+        <RangeRuler selected={selected} />
         {/* Era names above the years: each picks the longest label that fits its band
             (name → short → abbreviation → nothing), like the era buttons do. The full name is in the tooltip. */}
         {bands.map((band) => (
@@ -257,7 +273,9 @@ function Axis({
         {ticks.map((year) => (
           <span
             key={year}
-            className="absolute bottom-1 -translate-x-1/2 rounded-[3px] bg-white/60 px-1 font-type leading-tight"
+            className={`absolute bottom-1 -translate-x-1/2 rounded-[3px] bg-white/60 px-1 font-type leading-tight ${
+              year < selected.from || year > selected.to + 1 ? 'text-umber/45' : ''
+            }`}
             style={{ left: `${toPercent(year, range)}%` }}
           >
             {year}
@@ -278,11 +296,12 @@ const SKELETON_ROWS = 8
  * The shimmer stops for people who ask their system for reduced motion (see .skeleton in index.css).
  */
 export function TimelineSkeleton({ range }: { range: YearRange }) {
-  const ticks = tickYears(range)
-  const bands = eraBands(range)
+  const view = displayRange(range)
+  const ticks = tickYears(view)
+  const bands = eraBands(view)
   return (
     <div className="flex flex-col" aria-hidden="true">
-      <Axis range={range} ticks={ticks} bands={bands} updating={false} />
+      <Axis range={view} selected={range} ticks={ticks} bands={bands} updating={false} />
       {Array.from({ length: SKELETON_ROWS }, (_, i) => (
         <div
           key={i}
@@ -442,7 +461,7 @@ function EraName({ band }: { band: EraBand }) {
   return (
     <span
       title={`${era.name}, ${era.label}`}
-      className="@container absolute top-1 overflow-hidden pl-1.5 font-display text-[15px] leading-tight font-semibold whitespace-nowrap text-bottle/85"
+      className="@container absolute top-9 overflow-hidden pl-1.5 font-display text-[15px] leading-tight font-semibold whitespace-nowrap text-bottle/85"
       style={{ left: `${band.left}%`, width: `${band.width}%` }}
     >
       <span className={`hidden ${fit.name}`}>{era.name}</span>
@@ -456,17 +475,65 @@ function EraName({ band }: { band: EraBand }) {
  * Faint era bands behind the axis and every row: every second era (by its place in ERAS) is shaded
  * straw, and a dashed line marks where an era begins inside the range. Drawn under the grid and bars.
  */
-function EraBands({ bands }: { bands: EraBand[] }) {
+function EraBands({ bands, linesOnly = false }: { bands: EraBand[]; linesOnly?: boolean }) {
   return bands.map((band) => (
     <div
       key={band.name}
       aria-hidden="true"
-      className={`absolute inset-y-0 ${band.index % 2 === 1 ? 'bg-straw/25' : ''} ${
+      className={`absolute inset-y-0 ${band.index % 2 === 1 && !linesOnly ? 'bg-straw/25' : ''} ${
         band.startsInside ? 'border-l border-dashed border-bottle/35' : ''
       }`}
       style={{ left: `${band.left}%`, width: `${band.width}%` }}
     />
   ))
+}
+
+/**
+ * A ruler over the chosen range at the top of the axis, saying in words which part is the user's range.
+ * The label sits above the ruler with a small gap, not on its line (Siyan, 2026-11-17).
+ */
+function RangeRuler({ selected }: { selected: YearRange }) {
+  const band = rangeBand(selected)
+  return (
+    <>
+      <span
+        className="absolute top-0 z-[1] -translate-x-1/2 rounded-[6px] bg-bottle px-2 font-type text-[12px] leading-snug whitespace-nowrap text-white"
+        style={{ left: `${band.left + band.width / 2}%` }}
+      >
+        Your range · {selected.from} – {selected.to}
+      </span>
+      <HorizontalBrace left={band.left} width={band.width} />
+    </>
+  )
+}
+
+/**
+ * A horizontal curly brace, like ⏞ in maths, over the chosen range: the ends curl down to the
+ * axis and the point in the middle looks up at the "Your range" label (Siyan's idea, 2026-11-17).
+ * Built from small fixed SVG pieces joined by stretching lines, so the curves never distort
+ * however wide the range is. 12px high; the straight parts sit 5px from the top.
+ */
+function HorizontalBrace({ left, width }: { left: number; width: number }) {
+  const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round' } as const
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute top-[23px] z-[1] flex h-3 text-bottle"
+      style={{ left: `${left}%`, width: `${width}%` }}
+    >
+      <svg width="8" height="12" className="shrink-0 overflow-visible">
+        <path d="M0.75 12 Q0.75 5 8 5" {...stroke} />
+      </svg>
+      <div className="mt-[4.25px] h-0 min-w-0 flex-1 border-t-[1.5px] border-bottle" />
+      <svg width="16" height="12" className="shrink-0 overflow-visible">
+        <path d="M0 5 Q8 5 8 0.75 Q8 5 16 5" {...stroke} />
+      </svg>
+      <div className="mt-[4.25px] h-0 min-w-0 flex-1 border-t-[1.5px] border-bottle" />
+      <svg width="8" height="12" className="shrink-0 overflow-visible">
+        <path d="M0 5 Q7.25 5 7.25 12" {...stroke} />
+      </svg>
+    </div>
+  )
 }
 
 /**

@@ -21,6 +21,10 @@ export function Legend({ markGender }: { markGender: boolean }) {
           </span>
           Birth or death known only to the year (or a span): it happened somewhere in the light part
         </li>
+        <li className="flex items-center gap-2">
+          <span aria-hidden="true" className="h-3.5 w-9 border border-ink/15 bg-paper" />
+          Pale years on the axis: 50 years before and after your range, so whole lives are shown
+        </li>
       </ul>
       {markGender && (
         <ul className="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">

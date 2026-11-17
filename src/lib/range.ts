@@ -51,7 +51,8 @@ export function rangeLength({ from, to }: YearRange): number {
 /** Axis labels: finer steps for short ranges, coarser for long ones. */
 export function tickYears({ from, to }: YearRange): number[] {
   const length = to + 1 - from
-  const step = length <= 60 ? 5 : length <= 150 ? 10 : length <= 320 ? 25 : length <= 800 ? 100 : 250
+  // 400 (not 320) so that an era plus its two 50-year margins (1450–1799 = 350 years) still gets 25-year steps.
+  const step = length <= 60 ? 5 : length <= 150 ? 10 : length <= 400 ? 25 : length <= 800 ? 100 : 250
   const ticks: number[] = []
   for (let year = Math.ceil(from / step) * step; year <= to + 1; year += step) ticks.push(year)
   return ticks
@@ -120,4 +121,25 @@ export function eraBands(range: YearRange): EraBand[] {
       },
     ]
   })
+}
+
+/**
+ * Years drawn on each side of the chosen range (supervisor, 2026-11-17). Someone born in 1470 who
+ * lived into the range used to be cut at 1500 and looked like a tiny bar, as if it were an error;
+ * with the margin the whole life shows. The margin is only room to draw: the people listed are still
+ * those who may have been alive inside the chosen range (Siyan's point, 2026-11-17), otherwise the
+ * same cut would just move 50 years earlier.
+ */
+export const MARGIN_YEARS = 50
+
+/** The stretch of time the timeline draws: the chosen range plus the margins, never past DOMAIN_END. */
+export function displayRange({ from, to }: YearRange): YearRange {
+  return { from: from - MARGIN_YEARS, to: Math.min(DOMAIN_END, to + MARGIN_YEARS) }
+}
+
+/** Where the chosen range itself falls on the timeline, in % of the axis: the ruler above the years. */
+export function rangeBand(range: YearRange): { left: number; width: number } {
+  const view = displayRange(range)
+  const span = view.to + 1 - view.from
+  return { left: ((range.from - view.from) / span) * 100, width: ((range.to + 1 - range.from) / span) * 100 }
 }

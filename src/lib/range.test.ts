@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { eraBands, normaliseRange, parseYearText, rangeFromSearch, rangeLength, rangeToSearch, tickYears } from './range'
+import {
+  displayRange,
+  eraBands,
+  rangeBand,
+  normaliseRange,
+  parseYearText,
+  rangeFromSearch,
+  rangeLength,
+  rangeToSearch,
+  tickYears,
+} from './range'
 
 describe('normaliseRange', () => {
   it('clamps to the slider domain and puts the ends in order', () => {
@@ -72,5 +82,29 @@ describe('eraBands', () => {
   })
   it('a one-year range on an era boundary belongs to one era only', () => {
     expect(eraBands({ from: 1750, to: 1750 }).map((b) => b.name)).toEqual(['Modern'])
+  })
+})
+
+describe('displayRange', () => {
+  it('adds 50 years on each side', () => {
+    expect(displayRange({ from: 1500, to: 1749 })).toEqual({ from: 1450, to: 1799 })
+  })
+  it('does not draw past the last year of the data', () => {
+    expect(displayRange({ from: 1923, to: 2025 })).toEqual({ from: 1873, to: 2025 })
+  })
+})
+
+describe('tickYears with margins', () => {
+  it('keeps 25-year steps for an era plus its margins', () => {
+    expect(tickYears(displayRange({ from: 1500, to: 1749 }))[0]).toBe(1450)
+    expect(tickYears(displayRange({ from: 1500, to: 1749 }))[1]).toBe(1475)
+  })
+})
+
+describe('rangeBand', () => {
+  it('sits between the two margins', () => {
+    const band = rangeBand({ from: 1500, to: 1749 })
+    expect(band.left).toBeCloseTo((50 / 350) * 100)
+    expect(band.width).toBeCloseTo((250 / 350) * 100)
   })
 })
