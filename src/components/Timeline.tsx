@@ -218,7 +218,7 @@ export function Timeline({ people, range, markGender, updating = false }: Timeli
         {yearLine && (
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute top-[54px] bottom-0 z-10 border-l-[1.5px] border-bottle"
+            className="pointer-events-none absolute top-[59px] bottom-0 z-10 border-l-[1.5px] border-bottle"
             style={{ left: yearLine.x }}
           >
             {/* Level with the axis years and the same size as them (Siyan, 2026-11-17), so it reads as
