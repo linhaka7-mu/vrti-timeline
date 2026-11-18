@@ -61,9 +61,12 @@ function App() {
 
   // No background colour on the outer box: the green and its grain come from <html> (index.css).
   return (
-    <div className="min-h-screen p-4 sm:p-7">
+    // On a phone (narrower than 640px) there is no green frame: the paper card fills the screen, with no
+    // border, dashed inner line or corner fringes, because every pixel counts there (Siyan, 2026-11-18).
+    // From 640px up (Tailwind's sm:) the card sits in its frame as before.
+    <div className="min-h-screen sm:p-7">
       {/* The top padding is deeper than the bottom, to leave room for the corner fringes. */}
-      <div className="paper relative mx-auto flex max-w-[1384px] flex-col gap-7 rounded-md border-2 border-copper px-5 pt-12 pb-8 outline outline-1 -outline-offset-[12px] outline-dashed outline-copper sm:px-13 sm:pt-[60px] sm:pb-11">
+      <div className="paper relative mx-auto flex min-h-screen max-w-[1384px] flex-col gap-7 px-4 pt-6 pb-8 sm:min-h-0 sm:rounded-md sm:border-2 sm:border-copper sm:px-13 sm:pt-[60px] sm:pb-11 sm:outline sm:outline-1 sm:-outline-offset-[12px] sm:outline-dashed sm:outline-copper">
         <CornerFringe side="left" />
         <CornerFringe side="right" />
         <header className="flex flex-wrap items-end justify-between gap-4 border-b border-copper pb-4">

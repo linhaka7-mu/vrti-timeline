@@ -70,6 +70,13 @@
     background-image: var(--grain);
     background-size: 160px 160px;
   }
+  /* Phones: no green frame (App.tsx), so the page behind the card is paper too; a green edge would
+     otherwise show when the page is pulled past its end. */
+  @media (width < 40rem) {
+    html {
+      background-color: var(--color-paper);
+    }
+  }
   body {
     margin: 0;
     font-family: var(--font-sans);

@@ -12,7 +12,7 @@ export function CornerFringe({ side }: { side: 'left' | 'right' }) {
   return (
     <svg
       aria-hidden="true"
-      className={`pointer-events-none absolute top-[14px] w-[38%] max-w-[260px] text-copper ${
+      className={`pointer-events-none absolute top-[14px] hidden w-[38%] max-w-[260px] text-copper sm:block ${
         side === 'left' ? 'left-[14px]' : 'right-[14px]'
       }`}
       height={FRINGE_HEIGHT}
